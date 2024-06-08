@@ -2,17 +2,20 @@ import lark
 
 grammar = r"""
 
-md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{"
+md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" ">"
 escaped_sym_inl: "\\" md_open_sym_inl
 
 url: /.+/
-STRING: /[^`#[*_{\n]+/
+STRING: /[^`#[*_{>\n]+/
 ?tight_string: /[^`#[*_{\n]+(?=(\s))/
 ?tight_under: /[^`#[*_{\n]+/
 ?tight_star: /\S/ | /\S.+(?=[*])/
 ?tight_starr: /\S/ | /\S.+(?=[*][*])/
 PAR_STRING: /[^)]+/
 BR_STRING: /[^]]+/
+CUR_BR_STRING: /[^}]+/
+COLON_STRING: /[^:\n]+?(?=:)/
+PIPE_STRING: /[^|\n]+?(?=[|])/
 identifier: /[a-z]+/
 
 code: /[^`]+/
@@ -21,32 +24,30 @@ code: /[^`]+/
 
 %import common.SIGNED_NUMBER    -> NUMBER
 
-?element: (
-    | italic)
-
-?inlinable: (
-    | inline_pre
+?element: (non_nestable_inlines
+    | non_nestable_blocks
     | italic
-    | star_bold
-    | plain_text)
-?inlinable2: (
-    | inline_pre
+    | star_bold)
+
+?non_nestable_inlines: (inline_pre
     | ref
     | anchor
     | image
-    | custom_directive)
+    | plain_text
+    | custom_directive
+    | popover)
+
+?non_nestable_blocks: (code_block | quote)
 
 notworking: (
-    | code_block
-    | quote
     | unordered_list
     | table_row)
 
-?start: (inline_pre | italic | star_bold | plain_text | NEWLINE)+
+?start: (element | NEWLINE)+
 
 italic: (star_italic | under_italic)
 
-quote: "> " (italic | star_bold | plain_text)+
+quote: ">" (italic | star_bold | non_nestable_inlines)+
 
 # * item
 # * item
@@ -56,13 +57,13 @@ unordered_list: "*" element+ NEWLINE
 inline_pre: "`" inline_code "`"
 
 # _italic text_
-?under_italic: "_" (plain_text | star_bold | inline_pre)+ "_"
+?under_italic: "_" (non_nestable_inlines | star_bold)+ "_"
 # *italic text*
-?star_italic: "*" (plain_text | star_bold | inline_pre)+ "*"
+?star_italic: "*" (non_nestable_inlines | star_bold)+ "*"
 
 # **bold text**
 # bold > italic
-star_bold.2: "**" (plain_text | italic | inline_pre)+ "**"
+star_bold.2: "**" (non_nestable_inlines | italic)+ "**"
 
 # some normal text 192874981 _ 81
 # everything > plaintext
@@ -82,10 +83,10 @@ table_cell: (inline_pre | italic | star_bold | plain_text)+
 table_row: "|" (table_cell ["|"])+ "|" [/ +/] NEWLINE
 
 # ![alt](url)
-image: "!" "[" plain_text "]" "(" url ")"
+image: "!" "[" BR_STRING? "]" "(" PAR_STRING? ")"
 
 # [text](url)
-anchor: "[" BR_STRING "]" "(" PAR_STRING ")"
+anchor: "[" BR_STRING? "]" "(" PAR_STRING? ")"
 
 # Extensions
 
@@ -96,7 +97,10 @@ ref: "[^" /[^\]]/ "]"
 refitem: "[^" /[^\]]/ "]" ":"
 
 # {^embed-file: file}
-custom_directive: "{" "^" ("a".."z" | "-")+ ":" plain_text "}"
+custom_directive: "{" "^" COLON_STRING ":" CUR_BR_STRING "}"
+
+# {^hint|content w spaces}
+popover: "{" "^" PIPE_STRING "|" CUR_BR_STRING "}"
 
 # TODO
 # -----*
@@ -190,6 +194,28 @@ _italic **bold** something_
 _ital asd end_
 
 _ital `code` **also bold `code`**_
+
+a ref: [^1]
+
+_**[anchor text](anchor url)**_
+
+![alt text](url)
+
+{^embed-file: my-file.py}
+{^run-script: my-file.py --args 1 2 3}
+
+```bash
+some code _with under_
+xcaqwe
+   xcaqwe
+```
+
+and after code also
+
+> some quote _with italic_ and **bold** and _**both `code!` [link]()**_
+
+also text'with apostrophes
+blah {^UEFI|Unified Extensible Firmware Interface} qq
 """
 r = parser.parse(text1)
 print(r.pretty())
