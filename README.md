@@ -9,24 +9,24 @@ Input:
 
 ```python
 [
-	PT("text "),
-	Quote(
-		[
-			PT(" quote "),
-			Emphasis([PT("italic")]),
-			PT(" "),
-			Bold([PT("bold")]),
-			PT(" "),
-			Emphasis(
-				[
-					Bold([PT("both "),
-					InlineCode("code"),
-					PT(" "),
-					Anchor(None, None)]),
-				]
-			),
-		]
-	),
+    PT("text "),
+    Quote(
+        [
+            PT(" quote "),
+            Emphasis([PT("italic")]),
+            PT(" "),
+            Bold([PT("bold")]),
+            PT(" "),
+            Emphasis(
+                [
+                    Bold([PT("both "),
+                    InlineCode("code"),
+                    PT(" "),
+                    Anchor(None, None)]),
+                ]
+            ),
+        ]
+    ),
 ]
 ```
 where `PT` is `PlainText`
@@ -49,8 +49,8 @@ Heading
 * Code with indentation
 ```
     this would automatically
-	make code blocks
-	without triple-backtick
+    make code blocks
+    without triple-backtick
 ```
 
 ## Extensions
