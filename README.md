@@ -4,7 +4,7 @@ Parses a subset of Markdown. Generates a tree:
 
 Input:
 ```
-"text > quote _italic_ **bold** _**both `code` []()**_",
+text > quote _italic_ **bold** _**both `code` []()**_
 ```
 
 ```python
