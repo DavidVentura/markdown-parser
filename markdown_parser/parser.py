@@ -2,65 +2,84 @@ import lark
 
 grammar = r"""
 
+md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{"
+escaped_sym_inl: "\\" md_open_sym_inl
+
 url: /.+/
-STRING: /[^[*_{}`\n]+/
+STRING: /[^`#[*_{\n]+/
+?tight_string: /[^`#[*_{\n]+(?=(\s))/
+?tight_under: /[^`#[*_{\n]+/
+?tight_star: /\S/ | /\S.+(?=[*])/
+?tight_starr: /\S/ | /\S.+(?=[*][*])/
 PAR_STRING: /[^)]+/
 BR_STRING: /[^]]+/
 identifier: /[a-z]+/
 
 code: /[^`]+/
 ?inline_code: /[^`]+/
-newline: /\n/
+%import common.NEWLINE
 
 %import common.SIGNED_NUMBER    -> NUMBER
 
 ?element: (
-    | code_block
+    | italic)
+
+?inlinable: (
+    | inline_pre
+    | italic
+    | star_bold
+    | plain_text)
+?inlinable2: (
     | inline_pre
     | ref
-    | quote
-    | italic
-    | unordered_list
-    | star_bold
     | anchor
     | image
-    | table_row
-    | newline
-    | custom_directive
-    | plain_text)
+    | custom_directive)
 
-?start: (element | newline)+
+notworking: (
+    | code_block
+    | quote
+    | unordered_list
+    | table_row)
 
-italic: star_italic
-    | under_italic
+?start: (inline_pre | italic | star_bold | plain_text | NEWLINE)+
+
+italic: (star_italic | under_italic)
 
 quote: "> " (italic | star_bold | plain_text)+
 
 # * item
 # * item
-unordered_list: "*" element+ newline
+unordered_list: "*" element+ NEWLINE
 
 # `some inline code()`
 inline_pre: "`" inline_code "`"
 
 # _italic text_
-?under_italic: "_" (star_bold | plain_text)+ "_"
+?under_italic: "_" (plain_text | star_bold | inline_pre)+ "_"
 # *italic text*
-?star_italic: "*" (star_bold | plain_text)+ "*"
+?star_italic: "*" (plain_text | star_bold | inline_pre)+ "*"
 
 # **bold text**
-star_bold: "**" (italic | plain_text)+ "**"
+# bold > italic
+star_bold.2: "**" (plain_text | italic | inline_pre)+ "**"
 
 # some normal text 192874981 _ 81
-plain_text.-2: (STRING | NUMBER)+
+# everything > plaintext
+plain_text.-2: STRING+
+
+# "a" "aa" "a ahsfkj 12874 a" (ends have no spaces)
+tight_plain_text: /\S/ tight_string?
+xtight_plain_text: (/\S/|/\S/ /\S/)
 
 # ```bash
 # a code block
 # ```
-code_block.2: "```" [identifier newline] (code)+ "```"
+# code block > inline_pre (`)
+code_block.2: "```" [identifier NEWLINE] (code)+ "```"
 
 table_cell: (inline_pre | italic | star_bold | plain_text)+
-table_row: "|" (table_cell ["|"])+ "|" [/ +/] newline
+table_row: "|" (table_cell ["|"])+ "|" [/ +/] NEWLINE
 
 # ![alt](url)
 image: "!" "[" plain_text "]" "(" url ")"
@@ -155,6 +174,22 @@ text1 = """some text **boldy**
 some text2 [qqqqqqqqq](asd)
 some text3 _undery_"""
 text1 = bp
-text1 = """asd"""
+text1 = """_aaa aaa_
+_asdqwe_
+_a_
+_aa_
+
+normal text _with italics_ and more 
+normal text **with bold** and more 
+
+normal **bold _italic_ more** normal
+_italic **bold** something_
+
+`asd`
+
+_ital asd end_
+
+_ital `code` **also bold `code`**_
+"""
 r = parser.parse(text1)
 print(r.pretty())
