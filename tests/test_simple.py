@@ -1,5 +1,9 @@
 import pytest
 
+from textwrap import dedent
+
+from lark import Token
+
 from markdown_parser.parser import make_parser
 from markdown_parser.nodes import *
 
@@ -128,3 +132,46 @@ def test_compound(parser, md, expected):
 def test_extensions(parser, md, expected):
     got = parser.parse(md)
     assert got == expected
+
+
+def test_html(parser):
+    htmlstr = dedent(
+        """
+    <video controls>
+        <source src="/file1" />
+        <source src="/file2"></source>
+    </video>
+    """
+    ).strip()
+
+    got = parser.parse(htmlstr)
+    assert got.children == [
+        HtmlOpenTag(
+            elem_type="video",
+            props=[KV(key="controls", val="")],
+        ),
+        Token("NEWLINE", "\n"),
+        PT(text="    "),
+        HtmlSelfCloseTag(
+            elem_type="source",
+            props=[
+                KV(
+                    key="src",
+                    val='"/file1"',
+                ),
+                KV(
+                    key="src",
+                    val='"/file1"',
+                ),
+            ],
+        ),
+        Token("NEWLINE", "\n"),
+        PT(text="    "),
+        HtmlOpenTag(
+            elem_type="source",
+            props=[KV(key="src", val='"/file2"')],
+        ),
+        HtmlCloseTag(elem_type="source"),
+        Token("NEWLINE", "\n"),
+        HtmlCloseTag(elem_type="video"),
+    ]

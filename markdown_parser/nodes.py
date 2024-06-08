@@ -71,3 +71,21 @@ class CustomDirective(Node):
 class Popover(Node):
     hint: str
     content: str
+
+@dataclass
+class KV:
+    key: str
+    val: str
+@dataclass
+class HtmlOpenTag(Node):
+    elem_type: str
+    props: list[KV]
+
+@dataclass
+class HtmlCloseTag(Node):
+    elem_type: str
+
+@dataclass
+class HtmlSelfCloseTag(Node):
+    elem_type: str
+    props: list[KV]

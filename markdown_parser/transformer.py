@@ -1,3 +1,4 @@
+import shlex
 from lark import Transformer
 
 from markdown_parser.nodes import *
@@ -82,3 +83,39 @@ class NodeTransformer(Transformer):
     def popover(self, items):
         hint, content = items
         return Popover(hint.value, content.value)
+
+    def html_open_tag(self, items):
+        tag, *pprops = items
+
+        nodeprops = []
+        propname = ""
+        propval = ""
+        self_closing = False
+        for parsed in pprops:
+            if parsed is None:
+                continue
+            if parsed.type == "WS":
+                continue
+            if parsed.type == "HTML_PROP_NAME":
+                if propname:
+                    nodeprops.append(KV(propname, propval))
+                if parsed.value == "/":
+                    self_closing = True
+                    continue
+                propval = ""
+                propname = parsed.value
+            if parsed.type == "HTML_VALUE":
+                assert parsed.value[0] == "="
+                propval = parsed.value[1:] # starts with '='
+
+        if propname:
+            nodeprops.append(KV(propname, propval))
+
+        if self_closing:
+            return HtmlSelfCloseTag(tag.value, nodeprops)
+
+        return HtmlOpenTag(tag.value, nodeprops)
+
+    def html_close_tag(self, items):
+        assert len(items) == 1
+        return HtmlCloseTag(items[0].value)

@@ -8,7 +8,7 @@ md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" | ">" | "|"
 escaped_sym_inl: "\\" md_open_sym_inl
 
 # string does not capture any symbols which may start a new tag
-string: /[^`#*[_{>|\n]+/
+string: /[^`#*[_{<>|\n]+/
 PAR_STRING: /[^)]+/
 BR_STRING: /[^]]+/
 CUR_BR_STRING: /[^}]+/
@@ -19,6 +19,8 @@ identifier: /[a-z]+/
 code: /[^`]+/
 ?inline_code: /[^`]+/
 %import common.NEWLINE
+%import common.ESCAPED_STRING
+%import common.WS
 
 %import common.SIGNED_NUMBER    -> NUMBER
 
@@ -38,6 +40,7 @@ code: /[^`]+/
 
 ?non_nestable_blocks: (code_block
     | quote
+    | html_tag
     | table_row)
 
 notworking: (
@@ -100,6 +103,16 @@ custom_directive: "{" "^" COLON_STRING ":" CUR_BR_STRING "}"
 # {^hint|content w spaces}
 popover: "{" "^" PIPE_STRING "|" CUR_BR_STRING "}"
 
+?html_tag: html_open_tag | html_close_tag
+
+EQUAL: "="
+QUOTE: "\""
+
+HTML_PROP_NAME: /[^=>\s]+/
+HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
+html_open_tag: "<" /\S+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
+html_close_tag: "</" /[^>]+?(?=>)/ ">"
+
 # TODO
 # -----*
 # heading # ## ### ...
@@ -113,7 +126,7 @@ popover: "{" "^" PIPE_STRING "|" CUR_BR_STRING "}"
 
 
 def make_parser():
-    return lark.Lark(grammar, parser='lalr', debug=True, lexer="contextual", transformer=NodeTransformer())
+    return lark.Lark(grammar, parser='lalr', debug=True, lexer="contextual", transformer=NodeTransformer(), maybe_placeholders=True)
 
 if __name__ == "__main__":
     parser = make_parser()
@@ -247,4 +260,12 @@ if __name__ == "__main__":
     [^1]: the footnote _with it_
     """
     r = parser.parse(text1)
+    html = """
+    text
+    <video controls>
+        <source src="/file1" />
+        <source src="/file2"></source>
+    </video>
+    """
+    r = parser.parse(html)
     print(r.pretty())
