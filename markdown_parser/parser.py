@@ -41,6 +41,7 @@ code: /[^`]+/
 ?non_nestable_blocks: (code_block
     | quote
     | html_tag
+    | heading
     | table_row)
 
 notworking: (
@@ -103,20 +104,21 @@ custom_directive: "{" "^" COLON_STRING ":" CUR_BR_STRING "}"
 # {^hint|content w spaces}
 popover: "{" "^" PIPE_STRING "|" CUR_BR_STRING "}"
 
-?html_tag: html_open_tag | html_close_tag
 
 EQUAL: "="
 QUOTE: "\""
 
 HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
+
+?html_tag: html_open_tag | html_close_tag
 html_open_tag: "<" /\S+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"
 
+HASH: "#"
+heading: HASH+ (non_nestable_inlines | star_bold | italic)+
 # TODO
 # -----*
-# heading # ## ### ...
-# <html>
 # numbered list 1. 2. 3.
 # unordered list (-)
 # unordered list (*, -) subitem

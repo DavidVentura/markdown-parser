@@ -1,5 +1,4 @@
-import shlex
-from lark import Transformer
+from lark import Transformer, Token
 
 from markdown_parser.nodes import *
 
@@ -119,3 +118,7 @@ class NodeTransformer(Transformer):
     def html_close_tag(self, items):
         assert len(items) == 1
         return HtmlCloseTag(items[0].value)
+
+    def heading(self, items):
+        count = len([1 for i in items if isinstance(i, Token) and i.type == "HASH"])
+        return Heading(count, items[count:])

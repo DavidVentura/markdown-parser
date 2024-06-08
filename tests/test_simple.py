@@ -52,6 +52,8 @@ PT = PlainText
         ("```bash\nsome code\n```", CodeBlock("bash", ["some code"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
         (">quote", Quote([PT("quote")])),
+        ("#h1", Heading(1, [PT("h1")])),
+        ("##h2", Heading(2, [PT("h2")])),
     ],
 )
 def test_simple_cases(parser, md, expected):

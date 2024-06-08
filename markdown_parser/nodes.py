@@ -89,3 +89,8 @@ class HtmlCloseTag(Node):
 class HtmlSelfCloseTag(Node):
     elem_type: str
     props: list[KV]
+
+@dataclass
+class Heading(Node):
+    level: int
+    content: list[Node]
