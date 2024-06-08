@@ -36,45 +36,58 @@ italic: star_italic
 
 quote: "> " (italic | star_bold | plain_text)+
 
+# * item
+# * item
 unordered_list: "*" element+ newline
+
+# `some inline code()`
 inline_pre: "`" inline_code "`"
+
+# _italic text_
 ?under_italic: "_" (star_bold | plain_text)+ "_"
-star_bold: "**" (italic | plain_text)+ "**"
+# *italic text*
 ?star_italic: "*" (star_bold | plain_text)+ "*"
+
+# **bold text**
+star_bold: "**" (italic | plain_text)+ "**"
+
+# some normal text 192874981 _ 81
 plain_text.-2: (STRING | NUMBER)+
+
+# ```bash
+# a code block
+# ```
 code_block.2: "```" [identifier newline] (code)+ "```"
 
 table_cell: (inline_pre | italic | star_bold | plain_text)+
 table_row: "|" (table_cell ["|"])+ "|" [/ +/] newline
 
+# ![alt](url)
 image: "!" "[" plain_text "]" "(" url ")"
+
+# [text](url)
 anchor: "[" BR_STRING "]" "(" PAR_STRING ")"
+
+# Extensions
+
+# [^ref]
 ref: "[^" /[^\]]/ "]"
 
-custom_directive: "{" "^" plain_text "}"
+# [^ref]: some text
+refitem: "[^" /[^\]]/ "]" ":"
 
-# >
-# ``
-# **
-# _ _
-# ** **
+# {^embed-file: file}
+custom_directive: "{" "^" ("a".."z" | "-")+ ":" plain_text "}"
 
-# ``` ```
-# []()
-# ![]()
+# TODO
 # -----*
-# # ## ### ...
+# heading # ## ### ...
 # <html>
-# bullet list *
 # numbered list 1. 2. 3.
+# unordered list (-)
+# unordered list (*, -) subitem
 # escape = \* \_ \`
 # &mdash; html entities
-# tables ???
-
-
-# extensions
-# [^note] + [^note]:
-# {custom-directive args}
 """
 
 
