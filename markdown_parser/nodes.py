@@ -23,8 +23,8 @@ class Anchor(Node):
 
 @dataclass
 class Image(Node):
-    alt: list[Node]
-    url: str
+    alt: str | None
+    url: str | None
 
 @dataclass
 class Quote(Node):
@@ -60,7 +60,7 @@ class Ref(Node):
 @dataclass
 class RefItem(Node):
     ref: str
-    text: str
+    text: list[Node]
 
 @dataclass
 class CustomDirective(Node):

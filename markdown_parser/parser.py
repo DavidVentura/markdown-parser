@@ -29,6 +29,7 @@ code: /[^`]+/
 
 ?non_nestable_inlines: (inline_pre
     | ref
+    | refitem
     | anchor
     | image
     | plain_text
@@ -90,7 +91,8 @@ anchor: "[" [BR_STRING] "]" "(" [PAR_STRING] ")"
 ref: "[^" /[^\]]/ "]"
 
 # [^ref]: some text
-refitem: "[^" /[^\]]/ "]" ":"
+# prio over ref
+refitem.2: "[^" /[^\]]/ "]:" (non_nestable_inlines | italic | star_bold)+
 
 # {^embed-file: file}
 custom_directive: "{" "^" COLON_STRING ":" CUR_BR_STRING "}"
@@ -238,6 +240,11 @@ if __name__ == "__main__":
 
     some text with [sqb]() asd
     some text with [_sqb_]() asd
+    """
+    text1 = """
+    something w fn [^1]
+
+    [^1]: the footnote _with it_
     """
     r = parser.parse(text1)
     print(r.pretty())

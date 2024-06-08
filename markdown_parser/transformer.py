@@ -27,14 +27,20 @@ class NodeTransformer(Transformer):
         string_tok = items[0]
         return InlineCode(text=string_tok.value)
 
-    def anchor(self, items):
+    def image(self, items):
+        alt, url = items
+        if alt is not None:
+            alt = alt.value
+        if url is not None:
+            url = url.value
+        return Image(alt, url)
 
+    def anchor(self, items):
         text, url = items
         if text is not None:
             text = text.value
         if url is not None:
             url = url.value
-
         return Anchor(text, url)
 
     def custom_directive(self, items):
@@ -49,6 +55,9 @@ class NodeTransformer(Transformer):
 
     def ref(self, items):
         return Ref(items[0].value)
+
+    def refitem(self, items):
+        return RefItem(items[0].value, items[1:])
 
     def code_block(self, items):
         identifier_t, *rest = items
@@ -65,6 +74,9 @@ class NodeTransformer(Transformer):
         code_tree = rest[0]
         assert len(code_tree.children) == 1
         lines = code_tree.children[0].splitlines()
+        if lines[0].strip() == '':
+            lines = lines[1:]
+
         return CodeBlock(identifier, lines)
 
     def popover(self, items):
