@@ -12,7 +12,8 @@ STRING: /[^`#*[_{<>|\n]+/
 # string can't capture valid text which is not actually a tag, examples:
 # * some [text] which is not an anchor
 #  - still can't have [^text]
-BR_WORD_NOT_ANCHOR: /\[[^^]+?](?!\()/
+#  - stop searching at ... newline? => probably
+BR_WORD_NOT_ANCHOR: /\[[^^(]+?](?![(\n])/
 # * some {text} which is not a directive TODO
 # * some text with a | which is not a table
 
