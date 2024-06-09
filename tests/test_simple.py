@@ -50,6 +50,7 @@ PT = PlainText
         ("![]()", Image(None, None)),
         ("```\nsome code\n```", CodeBlock(None, ["some code"])),
         ("```bash\nsome code\n```", CodeBlock("bash", ["some code"])),
+        ("```bash\nsome code\nwith `backticks`\n```", CodeBlock("bash", ["some code", "with `backticks`"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
         (">quote", Quote([PT("quote")])),
         ("#h1", Heading(1, [PT("h1")])),

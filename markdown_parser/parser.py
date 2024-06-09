@@ -17,7 +17,6 @@ BR_STRING: /[^]]+(?=])/
 CUR_BR_STRING: /[^}]+(?=})/
 COLON_STRING: /[^:\n]+?(?=:)/
 
-code: /[^`]+/
 ?inline_code: /[^`]+/
 %import common.LF
 %import common.ESCAPED_STRING
@@ -92,8 +91,9 @@ plain_text.-2: string+
 # a code block
 # ```
 # code block > inline_pre (`)
+code: /(.|\n)+?(?=```)/
 identifier: /[a-z]+/
-code_block.2: "```" [identifier LF] (code)+ "```"
+code_block.2: "```" [identifier] LF (code) "```"
 
 table_cell: (italic | star_bold | non_nestable_inlines)+
 table_row: "|" (table_cell "|")+ LF
