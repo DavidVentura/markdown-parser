@@ -134,3 +134,17 @@ class NodeTransformer(Transformer):
     def unordered_list(self, items):
         # filter out delimiting newlines
         return UnorderedList([i for i in items if not isinstance(i, Token)])
+
+    def ordered_list_item(self, items):
+        leading_space, *content = items
+        indentation = 0
+        assert leading_space is not None
+        assert leading_space.type == "LEADING_SPACE_NL"
+        # spaces digit(s) dot spaces
+        num = int(leading_space.partition(".")[0].strip())
+        indentation = len(leading_space.value) - len(leading_space.lstrip()) - 1
+        return OListItem(content, indentation, num)
+
+    def ordered_list(self, items):
+        # filter out delimiting newlines
+        return OrderedList([i for i in items if not isinstance(i, Token)])

@@ -33,7 +33,6 @@ where `PT` is `PlainText`
 
 ## Not yet implemented
 
-* Numbered lists
 * Escaping literal symbols (`\*` generates `*` in a text item)
 * HTML entities (`&mdash;`)
 * Tables

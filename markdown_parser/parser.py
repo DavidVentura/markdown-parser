@@ -44,7 +44,8 @@ code: /[^`]+/
     | html_tag
     | heading
     | table_row
-    | unordered_list)
+    | unordered_list
+    | ordered_list)
 
 notworking: (
     | table_row)
@@ -63,6 +64,13 @@ quote: ">" (italic | star_bold | non_nestable_inlines)+
 LEADING_SPACE_BL: LF ("* " | / +/ "* ")
 unordered_list: (unordered_list_item)+
 unordered_list_item: LEADING_SPACE_BL (non_nestable_inlines | star_bold | italic)+
+
+# 1. item
+#   3. item2
+# 1. item3
+LEADING_SPACE_NL: LF (/\d+/ "." | / +/ /\d+/ ".") " "
+ordered_list: (ordered_list_item)+
+ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+
 
 # `some inline code()`
 inline_pre: "`" inline_code "`"
@@ -127,9 +135,6 @@ heading: HASH+ (non_nestable_inlines | star_bold | italic)+
 
 # TODO
 # -----*
-# numbered list 1. 2. 3.
-# unordered list (-)
-# unordered list (*, -) subitem
 # escape = \* \_ \`
 # &mdash; html entities
 """
@@ -272,6 +277,12 @@ asd
 * aaaa
     * bbbb
 xxx
+
+1. item1
+    99. nested
+1. item2
+
+rrr
 """
     html = """
     text
@@ -286,7 +297,14 @@ xxx
 * a list1
     * a list2
         * another item
-qwe"""
+qwe
+
+1. item1
+    99. nested
+1. item2
+
+qwe
+"""
     r = parser.parse(text1)
     print(r)
     print(r.pretty())
