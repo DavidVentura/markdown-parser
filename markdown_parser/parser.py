@@ -127,7 +127,7 @@ HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
 
 ?html_tag: html_open_tag | html_close_tag
-html_open_tag: "<" /\S+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
+html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"
 
 HASH: "#"

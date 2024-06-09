@@ -155,6 +155,19 @@ def test_extensions(parser, md, expected):
     assert got == expected
 
 
+def test_html_oneline(parser):
+    html = """<center><video controls><source  src="assets/no-dma.mp4"></source></video></center>"""
+    got = parser.parse(html)
+    assert got.children == [
+        HtmlOpenTag(elem_type="center", props=[]),
+        HtmlOpenTag(elem_type="video", props=[KV(key="controls", val="")]),
+        HtmlOpenTag(elem_type="source", props=[KV(key="src", val='"assets/no-dma.mp4"')]),
+        HtmlCloseTag(elem_type="source"),
+        HtmlCloseTag(elem_type="video"),
+        HtmlCloseTag(elem_type="center"),
+    ]
+
+
 def test_html(parser):
     htmlstr = dedent(
         """
