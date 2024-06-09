@@ -54,6 +54,15 @@ PT = PlainText
         (">quote", Quote([PT("quote")])),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
+        (
+            "\n* list\n* item",
+            UnorderedList(
+                [
+                    ListItem([PT("list")], 0),
+                    ListItem([PT("item")], 0),
+                ]
+            ),
+        ),
     ],
 )
 def test_simple_cases(parser, md, expected):
@@ -152,7 +161,7 @@ def test_html(parser):
             elem_type="video",
             props=[KV(key="controls", val="")],
         ),
-        Token("NEWLINE", "\n"),
+        Token("LF", "\n"),
         PT(text="    "),
         HtmlSelfCloseTag(
             elem_type="source",
@@ -167,13 +176,13 @@ def test_html(parser):
                 ),
             ],
         ),
-        Token("NEWLINE", "\n"),
+        Token("LF", "\n"),
         PT(text="    "),
         HtmlOpenTag(
             elem_type="source",
             props=[KV(key="src", val='"/file2"')],
         ),
         HtmlCloseTag(elem_type="source"),
-        Token("NEWLINE", "\n"),
+        Token("LF", "\n"),
         HtmlCloseTag(elem_type="video"),
     ]

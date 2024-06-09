@@ -122,3 +122,15 @@ class NodeTransformer(Transformer):
     def heading(self, items):
         count = len([1 for i in items if isinstance(i, Token) and i.type == "HASH"])
         return Heading(count, items[count:])
+
+    def unordered_list_item(self, items):
+        leading_space, *content = items
+        indentation = 0
+        if leading_space is not None:
+            assert leading_space.type == "LEADING_SPACE_BL"
+            indentation = len(leading_space.value) - 3 # leading "\n" + trailing "* "
+        return ListItem(content, indentation)
+
+    def unordered_list(self, items):
+        # filter out delimiting newlines
+        return UnorderedList([i for i in items if not isinstance(i, Token)])
