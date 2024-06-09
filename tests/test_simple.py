@@ -56,15 +56,15 @@ PT = PlainText
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
         (
-            "\n* list\n* item",
+            "* list\n* item\n",
             UnorderedList([ListItem([PT("list")], 0), ListItem([PT("item")], 0)]),
         ),
         (
-            "\n1. list\n1. item",
+            "1. list\n1. item\n",
             OrderedList([OListItem([PT("list")], 0, 1), OListItem([PT("item")], 0, 1)]),
         ),
         (
-            "\n1. list\n    99. item\n1. list2",
+            "1. list\n    99. item\n1. list2\n",
             OrderedList(
                 [
                     OListItem([PT("list")], 0, 1),
@@ -184,7 +184,6 @@ def test_html(parser):
             elem_type="video",
             props=[KV(key="controls", val="")],
         ),
-        Token("LF", "\n"),
         PT(text="    "),
         HtmlSelfCloseTag(
             elem_type="source",
@@ -199,13 +198,11 @@ def test_html(parser):
                 ),
             ],
         ),
-        Token("LF", "\n"),
         PT(text="    "),
         HtmlOpenTag(
             elem_type="source",
             props=[KV(key="src", val='"/file2"')],
         ),
         HtmlCloseTag(elem_type="source"),
-        Token("LF", "\n"),
         HtmlCloseTag(elem_type="video"),
     ]

@@ -102,3 +102,11 @@ class HtmlSelfCloseTag(Node):
 class Heading(Node):
     level: int
     content: list[Node]
+
+@dataclass
+class Newline(Node):
+    pass
+
+@dataclass
+class ParBreak(Node):
+    pass

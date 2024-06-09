@@ -1,3 +1,4 @@
+import lark.visitors
 from lark import Transformer, Token
 
 from markdown_parser.nodes import *
@@ -69,8 +70,8 @@ class NodeTransformer(Transformer):
             if identifier is not None:
                 identifier = identifier.value
 
-        rest = rest[1:] # the first element is the newline between ``` and code
         assert len(rest) == 1
+        #rest = rest[1:] # the first element is the newline between ``` and code
         code_tree = rest[0]
         assert len(code_tree.children) == 1
         lines = code_tree.children[0].splitlines()
@@ -128,7 +129,7 @@ class NodeTransformer(Transformer):
         indentation = 0
         if leading_space is not None:
             assert leading_space.type == "LEADING_SPACE_BL"
-            indentation = len(leading_space.value) - 3 # leading "\n" + trailing "* "
+            indentation = len(leading_space.value) - 2 # trailing "* "
         return ListItem(content, indentation)
 
     def unordered_list(self, items):
@@ -142,9 +143,12 @@ class NodeTransformer(Transformer):
         assert leading_space.type == "LEADING_SPACE_NL"
         # spaces digit(s) dot spaces
         num = int(leading_space.partition(".")[0].strip())
-        indentation = len(leading_space.value) - len(leading_space.lstrip()) - 1
+        indentation = len(leading_space.value) - len(leading_space.lstrip())
         return OListItem(content, indentation, num)
 
     def ordered_list(self, items):
         # filter out delimiting newlines
         return OrderedList([i for i in items if not isinstance(i, Token)])
+
+    def PAR_BREAK(self, _items):
+        return ParBreak()

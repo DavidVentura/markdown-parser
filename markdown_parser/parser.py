@@ -17,8 +17,9 @@ BR_STRING: /[^]]+(?=])/
 CUR_BR_STRING: /[^}]+(?=})/
 COLON_STRING: /[^:\n]+?(?=:)/
 
+_LF: /\n/
+PAR_BREAK: _LF _LF+
 ?inline_code: /[^`]+/
-%import common.LF
 %import common.ESCAPED_STRING
 %import common.WS
 
@@ -49,8 +50,8 @@ COLON_STRING: /[^:\n]+?(?=:)/
 notworking: (
     | table_row)
 
-?xstart: (unordered_list | plain_text| LF )+
-?start: (element | LF)+
+?xstart: (unordered_list | plain_text| _LF )+
+?start: (element | PAR_BREAK | _LF)+
 
 #italic: (star_italic | under_italic)
 italic: under_italic
@@ -60,16 +61,16 @@ quote: ">" (italic | star_bold | non_nestable_inlines)+
 # * item
 #   * nested
 # * item
-LEADING_SPACE_BL: LF ("* " | / +/ "* ")
+LEADING_SPACE_BL: ("* " | / +/ "* ")
 unordered_list: (unordered_list_item)+
-unordered_list_item: LEADING_SPACE_BL (non_nestable_inlines | star_bold | italic)+
+unordered_list_item: LEADING_SPACE_BL (non_nestable_inlines | star_bold | italic)+ (_LF| PAR_BREAK)
 
 # 1. item
 #   3. item2
 # 1. item3
-LEADING_SPACE_NL: LF (/\d+/ "." | / +/ /\d+/ ".") " "
+LEADING_SPACE_NL: (/\d+/ "." | / +/ /\d+/ ".") " "
 ordered_list: (ordered_list_item)+
-ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+
+ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+ (_LF| PAR_BREAK)
 
 # `some inline code()`
 inline_pre: "`" inline_code "`"
@@ -93,10 +94,10 @@ plain_text.-2: string+
 # code block > inline_pre (`)
 code: /(.|\n)+?(?=```)/
 identifier: /[a-z]+/
-code_block.2: "```" [identifier] LF (code) "```"
+code_block.2: "```" [identifier] _LF (code) "```"
 
 table_cell: (italic | star_bold | non_nestable_inlines)+
-table_row: "|" (table_cell "|")+ LF
+table_row: "|" (table_cell "|")+ _LF
 
 # ![alt](url)
 image: "!" "[" [BR_STRING] "]" "(" [PAR_STRING] ")"
@@ -294,9 +295,12 @@ rrr
     text2 = """
     just text
 
+
+
 * a list1
     * a list2
         * another item
+
 qwe
 
 1. item1
@@ -305,6 +309,19 @@ qwe
 
 qwe
 """
-    r = parser.parse(text1)
-    print(r)
+    text1 = """
+    text
+    ```bash
+    some code
+    `with backticks`
+    ```
+    some text
+
+    ```
+    second block
+    ```
+    """
+    text2 = """<center><video controls><source  src="assets/no-dma.mp4"></source></video></center>"""
+    r = parser.parse(bp)
+    #print(r)
     print(r.pretty())
