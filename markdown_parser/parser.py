@@ -8,7 +8,14 @@ md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" | ">" | "|"
 escaped_sym_inl: "\\" md_open_sym_inl
 
 # string does not capture any symbols which may start a new tag
-string: /[^`#*[_{<>|\n]+/
+STRING: /[^`#*[_{<>|\n]+/
+# string can't capture valid text which is not actually a tag, examples:
+# * some [text] which is not an anchor
+#  - still can't have [^text]
+BR_WORD_NOT_ANCHOR: /\[[^^]+?](?!\()/
+# * some {text} which is not a directive TODO
+# * some text with a | which is not a table
+
 PIPE_STRING: /[^|\n]+?(?=[|])/
 
 # string-til-delim without capture eg: "a str") "a str"] "a str"}
@@ -43,12 +50,9 @@ PAR_BREAK: _LF _LF+
     | quote
     | html_tag
     | heading
-    | table_row
+    | table
     | unordered_list
     | ordered_list)
-
-notworking: (
-    | table_row)
 
 ?xstart: (unordered_list | plain_text| _LF )+
 ?start: (element | PAR_BREAK | _LF)+
@@ -86,7 +90,7 @@ star_bold.2: "**" (non_nestable_inlines | italic)+ "**"
 
 # some normal text 192874981 xx
 # everything > plain_text
-plain_text.-2: string+
+plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR)+
 
 # ```bash
 # a code block
@@ -96,8 +100,12 @@ code: /(.|\n)+?(?=```)/
 identifier: /[a-z]+/
 code_block.2: "```" [identifier] _LF (code) "```"
 
+
+TAB_DIV: /[:-]+/
 table_cell: (italic | star_bold | non_nestable_inlines)+
 table_row: "|" (table_cell "|")+ _LF
+table_divisor: "|" (TAB_DIV "|")+ _LF
+table: table_row table_divisor table_row+
 
 # ![alt](url)
 image: "!" "[" [BR_STRING] "]" "(" [PAR_STRING] ")"
@@ -175,19 +183,16 @@ if __name__ == "__main__":
     """
 
     table = """
-    | Address                         |Perms|Offset  |Path|
-    |---------------------------------|-----|--------|------------|
-    |`5604dff9a000-5604dff9c000`|`r--p`|000000|`/usr/bin/cat`|
+| Address                         |Perms|Offset  |Path|
+|:--------------------------------|:---:|-------:|------------|
+|`5604dff9a000-5604dff9c000`|`r--p`|000000|`/usr/bin/cat`|
 
 
-    | Address                         |Perms|Offset  |Path|
-    |---------------------------------|-----|--------|------------|
-    |`5604dff9a000-5604dff9c000` | `r--p` |000000|/usr/bin/cat|
-    |`5604e121d000-5604e123e000` | `rw-p` |000000|[heap]|
-    |`7f38a9bd8000-7f38a9c02000` | `r-xp` |002000|ld-linux-x86-64.so.2|
-    |`7fff378cb000-7fff378ec000` | `rw-p` |000000|[stack]|
-    |`7fff3794f000-7fff37953000` | `r--p` |000000|[vvar]|
-    |`7fff37953000-7fff37955000` | `r-xp` |000000|[vdso]|
+| Address                         |Perms|Offset  |Path|
+|---------------------------------|-----|--------|------------|
+|`5604dff9a000-5604dff9c000` | `r--p` |000000|/usr/bin/cat|
+|`5604e121d000-5604e123e000` | `rw-p` |000000|[heap]|
+|`7f38a9bd8000-7f38a9c02000` | `r-xp` |002000|ld-linux-x86-64.so.2|
 
     qwe
     """
@@ -322,6 +327,8 @@ qwe
     ```
     """
     text2 = """<center><video controls><source  src="assets/no-dma.mp4"></source></video></center>"""
-    r = parser.parse(bp)
+    sqbrak = "some text with [brackets x] on it"
+    sqbrak = "some text with | in it"
+    r = parser.parse(table)
     #print(r)
     print(r.pretty())

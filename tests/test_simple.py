@@ -34,6 +34,7 @@ PT = PlainText
     [
         ("some text", PT("some text")),
         ("some text with ' ap", PT("some text with ' ap")),
+        ("some text with [brackets x] on it", PT("some text with [brackets x] on it")),
         ("_oneword_", Emphasis([PT("oneword")])),
         ("_two words_", Emphasis([PT("two words")])),
         ("_a_", Emphasis([PT("a")])),
@@ -205,4 +206,59 @@ def test_html(parser):
         ),
         HtmlCloseTag(elem_type="source"),
         HtmlCloseTag(elem_type="video"),
+    ]
+
+
+def test_table(parser):
+    table = dedent(
+        """
+text
+
+| Address|Perms|Offset|Path|
+|---------------------------------|:----|-------:|:----------:|
+|`addr`|**bold**|some text|some **bold** text|
+|`addr2`|_italic_|some text|[heap]|
+    """
+    )
+
+    got = parser.parse(table)
+    assert len(got.children) == 3
+    got = got.children[2]
+    assert got.header == TableRow(
+        cells=[
+            TableCell(content=[PT(text=" Address")]),
+            TableCell(content=[PT(text="Perms")]),
+            TableCell(content=[PT(text="Offset")]),
+            TableCell(content=[PT(text="Path")]),
+        ],
+    )
+    assert got.divisors == [
+        TableDivisor(alignment=Alignment.CENTER),
+        TableDivisor(alignment=Alignment.LEFT),
+        TableDivisor(alignment=Alignment.RIGHT),
+        TableDivisor(alignment=Alignment.CENTER),
+    ]
+    assert got.rows == [
+        TableRow(
+            cells=[
+                TableCell(content=[InlineCode(text="addr")]),
+                TableCell(content=[Bold(content=[PT(text="bold")])]),
+                TableCell(content=[PT(text="some text")]),
+                TableCell(
+                    content=[
+                        PT(text="some "),
+                        Bold(content=[PT(text="bold")]),
+                        PT(text=" text"),
+                    ],
+                ),
+            ],
+        ),
+        TableRow(
+            cells=[
+                TableCell(content=[InlineCode(text="addr2")]),
+                TableCell(content=[Emphasis(content=[PT(text="italic")])]),
+                TableCell(content=[PT(text="some text")]),
+                TableCell(content=[PT(text="[heap]")]),
+            ],
+        ),
     ]

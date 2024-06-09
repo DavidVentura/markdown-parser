@@ -35,7 +35,6 @@ where `PT` is `PlainText`
 
 * Escaping literal symbols (`\*` generates `*` in a text item)
 * HTML entities (`&mdash;`)
-* Tables
 
 ## Unsupported (and no plans)
 

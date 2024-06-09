@@ -1,3 +1,4 @@
+import enum
 from dataclasses import dataclass
 
 @dataclass
@@ -39,9 +40,28 @@ class CodeBlock(Node):
 class InlineCode(Node):
     text: str
 
+class Alignment(enum.Enum):
+    LEFT = enum.auto()
+    CENTER = enum.auto()
+    RIGHT = enum.auto()
+
+@dataclass
+class TableDivisor(Node):
+    alignment: Alignment
+
+@dataclass
+class TableCell(Node):
+    content: list[Node]
+
+@dataclass
+class TableRow(Node):
+    cells: list[TableCell]
+
 @dataclass
 class Table(Node):
-    cells: list[Node]
+    header: TableRow
+    divisors: list[TableDivisor]
+    rows: list[TableRow]
 
 @dataclass
 class ListItem(Node):

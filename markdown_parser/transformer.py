@@ -1,15 +1,11 @@
-import lark.visitors
 from lark import Transformer, Token
 
 from markdown_parser.nodes import *
 
 class NodeTransformer(Transformer):
     def plain_text(self, items):
-        assert len(items) == 1
-        item = items[0]
-        assert len(item.children) == 1
-        string_tok = item.children[0]
-        return PlainText(text=string_tok.value)
+        text = "".join(items)
+        return PlainText(text=text)
 
     def under_italic(self, items):
         return self.italic(items)
@@ -152,3 +148,29 @@ class NodeTransformer(Transformer):
 
     def PAR_BREAK(self, _items):
         return ParBreak()
+
+    def table(self, items):
+        header, divisors, *rows = items
+        return Table(header, divisors, rows)
+
+    def table_cell(self, items):
+        return TableCell(items)
+
+    def table_row(self, items):
+        return TableRow(items)
+
+    def table_divisor(self, items):
+        ret = []
+        for item in items:
+            text = item.value.strip()
+            alignment = Alignment.CENTER
+            if text.startswith(":") and text.endswith(":"):
+                alignment = Alignment.CENTER
+            elif text.startswith(":"):
+                alignment = Alignment.LEFT
+            elif text.endswith(":"):
+                alignment = Alignment.RIGHT
+
+            td = TableDivisor(alignment)
+            ret.append(td)
+        return ret
