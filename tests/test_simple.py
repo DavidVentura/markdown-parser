@@ -2,7 +2,7 @@ import pytest
 
 from textwrap import dedent
 
-from lark import Token
+from lark import Tree
 
 from markdown_parser.parser import make_parser
 from markdown_parser.nodes import *
@@ -35,6 +35,7 @@ PT = PlainText
         ("some text", PT("some text")),
         ("some text with ' ap", PT("some text with ' ap")),
         ("some text with [brackets x] on it", PT("some text with [brackets x] on it")),
+        ("some text\n\nparagraph", [PT("some text"), ParBreak(), PlainText(text='paragraph')]),
         ("_oneword_", Emphasis([PT("oneword")])),
         ("_two words_", Emphasis([PT("two words")])),
         ("_a_", Emphasis([PT("a")])),
@@ -57,7 +58,7 @@ PT = PlainText
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
         (
-            "* list\n* item\n",
+            "\n* list\n* item",
             UnorderedList([ListItem([PT("list")], 0), ListItem([PT("item")], 0)]),
         ),
         (
@@ -74,11 +75,16 @@ PT = PlainText
                 ]
             ),
         ),
+        ("## *word* word2", Heading(2, [PT(" "), Emphasis([PT("word")]), PT(" word2")])),
+
     ],
 )
 def test_simple_cases(parser, md, expected):
     got = parser.parse(md)
-    assert got == expected
+    if isinstance(got, Tree):
+        assert got.children == expected
+    else:
+        assert got == expected
 
 
 @pytest.mark.parametrize(
@@ -115,37 +121,38 @@ def test_simple_cases(parser, md, expected):
         ),
         ("italic _`code`_", [PT("italic "), Emphasis([InlineCode("code")])]),
         (
-            "text > quote _italic_ **bold** _**both `code` []()**_",
-            [
-                PT("text "),
-                Quote(
-                    [
-                        PT(" quote "),
-                        Emphasis([PT("italic")]),
-                        PT(" "),
-                        Bold([PT("bold")]),
-                        PT(" "),
-                        Emphasis(
-                            [
-                                Bold([PT("both "), InlineCode("code"), PT(" "), Anchor(None, None)]),
-                            ]
-                        ),
-                    ]
-                ),
-            ],
+            "> quote _italic_ **bold** _**both `code` []()**_",
+            Quote(
+                [
+                    PT(" quote "),
+                    Emphasis([PT("italic")]),
+                    PT(" "),
+                    Bold([PT("bold")]),
+                    PT(" "),
+                    Emphasis(
+                        [
+                            Bold([PT("both "), InlineCode("code"), PT(" "), Anchor(None, None)]),
+                        ]
+                    ),
+                ]
+            ),
         ),
+        #("## Title _italic_", []),
     ],
 )
 def test_compound(parser, md, expected):
     got = parser.parse(md)
-    assert got.children == expected
+    if isinstance(got, Tree):
+        assert got.children == expected
+    else:
+        assert got == expected
 
 
 @pytest.mark.parametrize(
     "md,expected",
     [
         ("[^1]", Ref("1")),
-        ("[^1]: something", RefItem("1", [PT(" something")])),
+        ("\n[^1]: something", RefItem("1", [PT(" something")])),
         ("{^embed-file: my-file.svg}", CustomDirective("embed-file", ["my-file.svg"])),
         ("{^run-script: script.py --arg 1 2 3}", CustomDirective("run-script", ["script.py", "--arg", "1", "2", "3"])),
         ("{^hint|popover}", Popover("hint", "popover")),

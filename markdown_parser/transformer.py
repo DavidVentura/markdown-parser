@@ -121,11 +121,13 @@ class NodeTransformer(Transformer):
         return Heading(count, items[count:])
 
     def unordered_list_item(self, items):
+        if isinstance(items[0], ParBreak):
+            items = items[1:]
         leading_space, *content = items
         indentation = 0
         if leading_space is not None:
             assert leading_space.type == "LEADING_SPACE_BL"
-            indentation = len(leading_space.value) - 2 # trailing "* "
+            indentation = len(leading_space.value.lstrip('\n')) - 2 # trailing "* "
         return ListItem(content, indentation)
 
     def unordered_list(self, items):

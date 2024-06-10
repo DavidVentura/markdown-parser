@@ -38,7 +38,6 @@ where `PT` is `PlainText`
 
 ## Unsupported (and no plans)
 
-* Italics with single star `*text*`
 * Headings with underlines
 ```
 Heading
