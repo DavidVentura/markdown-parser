@@ -2,14 +2,19 @@ import lark
 from markdown_parser.transformer import NodeTransformer
 from markdown_parser.nodes import ParBreak
 
-# this should probably include blocks 
-# like ```, >, # ?
+# this should probably include multi-line blocks like ```
+# which shouldn't get split with multiple newlines in between
+
 grammar1 = r"""
 TEXT: /[^\n]+/
 LF: /\n/
 PAR_BREAK: LF LF+
 
-start: (TEXT | LF | PAR_BREAK)+
+CODELINE: /(.|\n)+?(?=```)/
+IDENTIFIER: /[a-z]+/
+CODE_BLOCK: "```" [IDENTIFIER] LF CODELINE "```"
+
+start: (CODE_BLOCK | TEXT | LF | PAR_BREAK)+
 
 """
 grammar2 = r"""
@@ -19,7 +24,7 @@ md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" | ">" | "|"
 escaped_sym_inl: "\\" md_open_sym_inl
 
 # string does not capture any symbols which may start a new tag
-STRING: /[^`#*[_{<>|\n\\!]/
+STRING: /[^`*[_{<>|\n\\!]/
 # string can't capture valid text which is not actually a tag, examples:
 # * some [text] which is not an anchor
 #  - still can't have [^text]
@@ -76,13 +81,13 @@ _LF: /\n/
 ?non_nestable_blocks.1: (code_block
     | refitem
     | quote
-    | html_tag
+    | html
     | heading
     | table
     | unordered_list
     | ordered_list)
 
-?xstart: ordered_list
+?xstart: table
 ?start: non_nestable_blocks? (non_nestable_inlines | italic | star_bold | _LF)*
 
 italic: (star_italic | under_italic)
@@ -137,7 +142,7 @@ code_block.2: "```" [identifier] _LF (code) "```"
 
 TAB_DIV: /[:  -]+/
 table_cell: (italic | star_bold | non_nestable_inlines)+
-table_row: "|" (table_cell "|")+ _LF
+table_row: "|" (table_cell "|")+ _LF?
 table_divisor: "|" (TAB_DIV "|")+ _LF
 table: table_row table_divisor table_row+
 
@@ -169,6 +174,7 @@ QUOTE: "\""
 HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
 
+html: html_tag (plain_text | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag
 html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"
@@ -192,7 +198,7 @@ class DoubleParser:
         chunks = self.p1.parse(text).children
         cur_chunk = []
         for chunk in chunks:
-            assert isinstance(chunk, lark.Token)
+            assert isinstance(chunk, lark.Token), chunk
             if chunk.type == "PAR_BREAK":
                 if cur_chunk:
                     chunk_text = "\n".join(cur_chunk)
@@ -256,22 +262,40 @@ text
 """
     text = "> quote\n"
     text2 = "## *word2* word"
-    text = """
-* item1
-* item2
-    * nested
-* item3
-"""
     text = "> quote _italic_ **bold** _**both `code` []()**_"
     text = ">> dquote"
     text = "1. list\n1. item"
     text = "1. list\n    99. item\n1. list2"
+    text = """
+<div>
+text
+</div>
+"""
+    text = """<div> text </div>
+"""
+    text = """
+| Address|Perms|Offset|Path|
+|---------------------------------|:----|-------:|:----------:|
+|`addr`|**bold**|some text|some **bold** text|
+|`addr2`|_italic_|some text|[heap]|
+"""
     
 
+    text = '<img src="assets/headers.svg" style="margin: 0px auto; width: 100%; max-width: 30rem" />'
+
+    text = """```bash
+    code
+
+    with manylines
+    ```
+    """
+    text = "its #1"
+    text = r"shrug ¯\\\_!ツ!\_/¯"
     t = parser.parse(text)
     print(t)
-    exit(0)
     bp = open('../blog/blog/raw/option-rom/POST.md').read()
+    r = parser.parse(bp)
+    print('okkk')
     for f in sorted(glob.glob('../blog/blog/raw/*/POST.md')):
         with open(f) as fd:
             bp = fd.read()
@@ -280,5 +304,5 @@ text
             print("OK", f)
         except:
             print("NOK", f)
-            raise
+            #raise
         #print(r.pretty())

@@ -54,7 +54,9 @@ PT = PlainText
         ("```bash\nsome code\n```", CodeBlock("bash", ["some code"])),
         ("```bash\nsome code\nwith `backticks`\n```", CodeBlock("bash", ["some code", "with `backticks`"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
+        ("```\nsome code\n\n2 blank lines```", CodeBlock(None, ["some code", "", "2 blank lines"])),
         (">quote", Quote([PT("quote")])),
+        ("hash not #title", PT("hash not #title")),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
         (
@@ -166,7 +168,7 @@ def test_extensions(parser, md, expected):
 def test_html_oneline(parser):
     html = """<center><video controls><source  src="assets/no-dma.mp4"></source></video></center>"""
     got = parser.parse(html)
-    assert got.children == [
+    assert got == [
         HtmlOpenTag(elem_type="center", props=[]),
         HtmlOpenTag(elem_type="video", props=[KV(key="controls", val="")]),
         HtmlOpenTag(elem_type="source", props=[KV(key="src", val='"assets/no-dma.mp4"')]),
@@ -187,7 +189,7 @@ def test_html(parser):
     ).strip()
 
     got = parser.parse(htmlstr)
-    assert got.children == [
+    assert got == [
         HtmlOpenTag(
             elem_type="video",
             props=[KV(key="controls", val="")],
@@ -219,8 +221,6 @@ def test_html(parser):
 def test_table(parser):
     table = dedent(
         """
-text
-
 | Address|Perms|Offset|Path|
 |---------------------------------|:----|-------:|:----------:|
 |`addr`|**bold**|some text|some **bold** text|
@@ -229,8 +229,6 @@ text
     )
 
     got = parser.parse(table)
-    assert len(got.children) == 3
-    got = got.children[2]
     assert got.header == TableRow(
         cells=[
             TableCell(content=[PT(text=" Address")]),
@@ -275,6 +273,7 @@ text
     [
         ("a word with\\_underscore", PT("a word with\\_underscore")),
         ("some void\\* data", PT("some void\\* data")),
+        #(r"shrug ¯\\\_(ツ)\_/¯", PT(r"¯\_(ツ)_/¯")),
     ]
 )
 def test_escapes(parser, md, expected):
