@@ -1,14 +1,25 @@
 import lark
 from markdown_parser.transformer import NodeTransformer
+from markdown_parser.nodes import ParBreak
 
-grammar = r"""
+# this should probably include blocks 
+# like ```, >, # ?
+grammar1 = r"""
+TEXT: /[^\n]+/
+LF: /\n/
+PAR_BREAK: LF LF+
+
+start: (TEXT | LF | PAR_BREAK)+
+
+"""
+grammar2 = r"""
 
 # lower than all tags
 md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" | ">" | "|"
 escaped_sym_inl: "\\" md_open_sym_inl
 
 # string does not capture any symbols which may start a new tag
-STRING: /[^`#*[_{<|\n\\!]/
+STRING: /[^`#*[_{<>|\n\\!]/
 # string can't capture valid text which is not actually a tag, examples:
 # * some [text] which is not an anchor
 #  - still can't have [^text]
@@ -44,7 +55,6 @@ CUR_BR_STRING: /[^}]+(?=})/
 COLON_STRING: /[^:\n]+?(?=:)/
 
 _LF: /\n/
-PAR_BREAK: _LF _LF+
 %import common.ESCAPED_STRING
 %import common.WS
 
@@ -72,41 +82,39 @@ PAR_BREAK: _LF _LF+
     | unordered_list
     | ordered_list)
 
-?xstart: (code_block | plain_text | PAR_BREAK | _LF)+
-?start: (element | delim)+
-
-delim: _DELIM
-_DELIM: (PAR_BREAK | _LF)
+?xstart: ordered_list
+?start: non_nestable_blocks? (non_nestable_inlines | italic | star_bold | _LF)*
 
 italic: (star_italic | under_italic)
-#italic: under_italic
 
-# splitting into quote_body allows for recursion, only requiring the first
-# match to have a leading newline // be its own block
 quote_body: ">" " "? (quote_body | italic | star_bold | non_nestable_inlines)+
-quote: _DELIM quote_body
+quote: (quote_body)+
 
 # * item
 #   * nested
 # * item
-LEADING_SPACE_BL: _DELIM ("* " | / +/ "* ")
-unordered_list: (unordered_list_item)+
+SPACES: / +/
+LEADING_SPACE_BL: /^\s*[*] /m
+unordered_list: (unordered_list_item _LF?)+
 unordered_list_item: LEADING_SPACE_BL (non_nestable_inlines | star_bold | italic)+
 
 # 1. item
 #   3. item2
 # 1. item3
-LEADING_SPACE_NL: (/\d+/ "." | / +/ /\d+/ ".") " "
-ordered_list: (ordered_list_item)+
-ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+ _DELIM
+LEADING_SPACE_NL: /^\s*\d+[.] /m
+ordered_list: (ordered_list_item _LF?)+
+ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+
 
 # `some inline code()`
-?inline_code: /[^`\n]+/
+NOT_BACKTICK: /[^`]+/
+?inline_code: NOT_BACKTICK
 inline_pre: "`" [inline_code] "`"
 
 # _italic text_
 ?under_italic: "_" (non_nestable_inlines | star_bold)+ "_"
 # *italic text*
+# "* " is to match a longer terminal, such as LEADING_SPACE_BL
+# which otherwise takes priority
 ?star_italic: "*" (non_nestable_inlines | star_bold)+ "*"
 
 # **bold text**
@@ -121,12 +129,13 @@ plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | UNPAIRED_BACKQUOTE | ESCAPED_UNDER
 # a code block
 # ```
 # code block > inline_pre (`)
-code: /(.|\n)+?(?=```)/
+CODELINE: /(.|\n)+?(?=```)/
+code: CODELINE
 identifier: /[a-z]+/
 code_block.2: "```" [identifier] _LF (code) "```"
 
 
-TAB_DIV: /[: -]+/
+TAB_DIV: /[:  -]+/
 table_cell: (italic | star_bold | non_nestable_inlines)+
 table_row: "|" (table_cell "|")+ _LF
 table_divisor: "|" (TAB_DIV "|")+ _LF
@@ -145,7 +154,7 @@ ref: "[^" /[^\]]+/ "]"
 
 # [^ref]: some text
 # where [^ref] is at the start of a line
-refitem: _DELIM "[^" /[^\]]+/ "]:" (non_nestable_inlines | italic | star_bold)+
+refitem: "[^" /[^\]]+/ "]:" (non_nestable_inlines | italic | star_bold)+
 
 # {^embed-file: file}
 custom_directive: "{^" COLON_STRING ":" CUR_BR_STRING "}"
@@ -173,9 +182,55 @@ heading: HASH+ (non_nestable_inlines | star_bold | italic)+
 # &mdash; html entities
 """
 
+class DoubleParser:
+    def __init__(self):
+        self.p1 = lark.Lark(grammar1, parser='lalr', debug=True, lexer="contextual")
+        self.p2 = lark.Lark(grammar2, parser='lalr', debug=True, lexer="contextual", transformer=NodeTransformer(), maybe_placeholders=True)
+
+    def parse(self, text):
+        ret = []
+        chunks = self.p1.parse(text).children
+        cur_chunk = []
+        for chunk in chunks:
+            assert isinstance(chunk, lark.Token)
+            if chunk.type == "PAR_BREAK":
+                if cur_chunk:
+                    chunk_text = "\n".join(cur_chunk)
+                    res = self.p2.parse(chunk_text)
+                    if isinstance(res, lark.Tree):
+                        ret.extend(res.children)
+                    elif isinstance(res, list):
+                        ret.extend(res)
+                    else:
+                        # single-item parsing
+                        ret.append(res)
+                    cur_chunk = []
+                ret.append(ParBreak())
+                continue
+            if chunk.type == "LF":
+                continue
+            cur_chunk.append(chunk.value)
+
+        if cur_chunk:
+            chunk_text = "\n".join(cur_chunk)
+            #print(chunk_text)
+            res = self.p2.parse(chunk_text)
+            if isinstance(res, lark.Tree):
+                ret.extend(res.children)
+            elif isinstance(res, list):
+                ret.extend(res)
+            else:
+                # single-item parsing
+                ret.append(res)
+            cur_chunk = []
+
+        # ugh, compat with parse()
+        if len(ret) == 1:
+            return ret[0]
+        return ret
 
 def make_parser():
-    return lark.Lark(grammar, parser='lalr', debug=True, lexer="contextual", transformer=NodeTransformer(), maybe_placeholders=True)
+    return DoubleParser()
 
 if __name__ == "__main__":
     parser = make_parser()
@@ -193,12 +248,25 @@ example[^2]:
     text = """
 asd
 
-> first _asd_
-> second
-> > nested
+```bash
+some code
+```
 
+text
 """
-    text = "some text\n\nparagraph"
+    text = "> quote\n"
+    text2 = "## *word2* word"
+    text = """
+* item1
+* item2
+    * nested
+* item3
+"""
+    text = "> quote _italic_ **bold** _**both `code` []()**_"
+    text = ">> dquote"
+    text = "1. list\n1. item"
+    text = "1. list\n    99. item\n1. list2"
+    
 
     t = parser.parse(text)
     print(t)

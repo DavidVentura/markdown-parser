@@ -54,19 +54,19 @@ PT = PlainText
         ("```bash\nsome code\n```", CodeBlock("bash", ["some code"])),
         ("```bash\nsome code\nwith `backticks`\n```", CodeBlock("bash", ["some code", "with `backticks`"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
-        ("\n>quote", [Quote([PT("quote")])]),
+        (">quote", Quote([PT("quote")])),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
         (
-            "\n* list\n* item",
+            "* list\n* item",
             UnorderedList([ListItem([PT("list")], 0), ListItem([PT("item")], 0)]),
         ),
         (
-            "1. list\n1. item\n",
+            "1. list\n1. item",
             OrderedList([OListItem([PT("list")], 0, 1), OListItem([PT("item")], 0, 1)]),
         ),
         (
-            "1. list\n    99. item\n1. list2\n",
+            "1. list\n    99. item\n1. list2",
             OrderedList(
                 [
                     OListItem([PT("list")], 0, 1),
@@ -121,7 +121,7 @@ def test_simple_cases(parser, md, expected):
         ),
         ("italic _`code`_", [PT("italic "), Emphasis([InlineCode("code")])]),
         (
-            "\n> quote _italic_ **bold** _**both `code` []()**_",
+            "> quote _italic_ **bold** _**both `code` []()**_",
             Quote(
                 [
                     PT("quote "),
