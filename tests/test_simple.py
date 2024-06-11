@@ -54,7 +54,7 @@ PT = PlainText
         ("```bash\nsome code\n```", CodeBlock("bash", ["some code"])),
         ("```bash\nsome code\nwith `backticks`\n```", CodeBlock("bash", ["some code", "with `backticks`"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
-        (">quote", Quote([PT("quote")])),
+        ("\n>quote", [Quote([PT("quote")])]),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
         (
@@ -121,10 +121,10 @@ def test_simple_cases(parser, md, expected):
         ),
         ("italic _`code`_", [PT("italic "), Emphasis([InlineCode("code")])]),
         (
-            "> quote _italic_ **bold** _**both `code` []()**_",
+            "\n> quote _italic_ **bold** _**both `code` []()**_",
             Quote(
                 [
-                    PT(" quote "),
+                    PT("quote "),
                     Emphasis([PT("italic")]),
                     PT(" "),
                     Bold([PT("bold")]),
@@ -269,3 +269,34 @@ text
             ],
         ),
     ]
+
+@pytest.mark.parametrize(
+    "md,expected",
+    [
+        ("a word with\\_underscore", PT("a word with\\_underscore")),
+        ("some void\\* data", PT("some void\\* data")),
+    ]
+)
+def test_escapes(parser, md, expected):
+    got = parser.parse(md)
+    if isinstance(got, Tree):
+        assert got.children == expected
+    else:
+        assert got == expected
+
+@pytest.mark.parametrize(
+    "md,expected",
+    [
+        ("[word in brackets]", PT("[word in brackets]")),
+        ("{word in cbrackets}", PT("{word in cbrackets}")),
+        # FIXME ("unpaired ` bquote\n", PT("unpaired ` bquote")),
+        # FIXME ("word with a | in it", PT("word with a | in it")),
+        ("an arrow -> right", PT("an arrow -> right")),
+    ]
+)
+def test_edge_cases(parser, md, expected):
+    got = parser.parse(md)
+    if isinstance(got, Tree):
+        assert got.children == expected
+    else:
+        assert got == expected

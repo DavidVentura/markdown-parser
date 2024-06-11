@@ -16,13 +16,25 @@ class NodeTransformer(Transformer):
     def star_bold(self, items):
         return Bold(content=items)
 
+    def delim(self, items):
+        assert len(items) == 1, items
+        return items[0]
+
+    def quote_body(self, items):
+        return Quote(items)
+
     def quote(self, items):
-        return Quote(content=items)
+        # whitespace
+        if isinstance(items[0], ParBreak):
+            items = items[1:]
+        return items
 
     def inline_pre(self, items):
         assert len(items) == 1
         string_tok = items[0]
-        return InlineCode(text=string_tok.value)
+        if string_tok is not None: # ``
+            return InlineCode(text=string_tok.value)
+        return InlineCode(text="")
 
     def image(self, items):
         alt, url = items
