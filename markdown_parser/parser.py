@@ -19,12 +19,8 @@ start: (CODE_BLOCK | TEXT | LF | PAR_BREAK)+
 """
 grammar2 = r"""
 
-# lower than all tags
-md_open_sym_inl: "`" | "#" | "*" | "[" | "_" | "{" | ">" | "|"
-escaped_sym_inl: "\\" md_open_sym_inl
-
-# string does not capture any symbols which may start a new tag
-STRING: /[^`*[_{<>|\n\\!]/
+# string does not capture any symbols which may start an inline-tag
+STRING: /[^`*[_{\n\\!]/
 # string can't capture valid text which is not actually a tag, examples:
 # * some [text] which is not an anchor
 #  - still can't have [^text]
@@ -40,7 +36,6 @@ CUR_BR_WORD_NOT_DIRECTIVE: /{[^^\n]+?}/
 # NOT working
 # * some text with a | which is not a table
 PIPE_STRING: /[^|\n]+?(?=[|])/
-UNPAIRED_BACKQUOTE.2: "`" /[^`\n]+?](?!`)/
 ARROW_R: "->"
 ARROW_L: "<-"
 
@@ -113,7 +108,7 @@ ordered_list: (ordered_list_item _LF?)+
 ordered_list_item: LEADING_SPACE_NL (non_nestable_inlines | star_bold | italic)+
 
 # `some inline code()`
-NOT_BACKTICK: /[^`]+/
+NOT_BACKTICK: /[^`]+(?=`)/
 ?inline_code: NOT_BACKTICK
 inline_pre: "`" [inline_code] "`"
 
@@ -130,7 +125,7 @@ star_bold.2: "**" (non_nestable_inlines | italic)+ "**"
 
 # some normal text 192874981 xx
 # everything > plain_text
-plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | UNPAIRED_BACKQUOTE | ESCAPED_CHAR | NON_IMAGE_BANG | CUR_BR_WORD_NOT_DIRECTIVE | ARROW_R | ARROW_L)+
+plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | ESCAPED_CHAR | NON_IMAGE_BANG | CUR_BR_WORD_NOT_DIRECTIVE | ARROW_R | ARROW_L)+
 
 # ```bash
 # a code block

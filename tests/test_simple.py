@@ -44,6 +44,10 @@ PT = PlainText
         ("**a**", Bold([PT("a")])),
         ("`code`", InlineCode("code")),
         ("`code words()`", InlineCode("code words()")),
+        ("`x]x`", InlineCode("x]x")),
+        ("`[sqcode]`", InlineCode("[sqcode]")),
+        ("`[sqcode] word`", InlineCode("[sqcode] word")),
+        ("two `code` blocks `here`", [PT("two "), InlineCode("code"), PT(" blocks "), InlineCode("here")]),
         ("[anchor text](url)", Anchor("anchor text", "url")),
         ("[anchor text]()", Anchor("anchor text", None)),
         ("[]()", Anchor(None, None)),
@@ -296,8 +300,8 @@ def test_table(parser):
 @pytest.mark.parametrize(
     "md,expected",
     [
-        ("a word with\\_underscore", PT("a word with\\_underscore")),
-        ("some void\\* data", PT("some void\\* data")),
+        ("a word with\\_underscore", PT("a word with_underscore")),
+        ("some void\\* data", PT("some void* data")),
         (r"shrug ¯\\\_(ツ)\_/¯", PT(r"shrug ¯\_(ツ)_/¯")),
     ],
 )
