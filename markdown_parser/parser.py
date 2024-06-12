@@ -30,8 +30,7 @@ STRING: /[^`*[_{<>|\n\\!]/
 #  - still can't have [^text]
 #  - stop searching at ... newline? => probably
 BR_WORD_NOT_ANCHOR: /\[[^^(]+?](?![(\n])/
-ESCAPED_UNDERSCORE: "\\" "_"
-ESCAPED_STAR: "\\" "*"
+ESCAPED_CHAR: "\\" /./
 NON_IMAGE_BANG: /!(?!\[)/
 # * some {text} which is not a directive
 #  - not {^somethng}
@@ -128,7 +127,7 @@ star_bold.2: "**" (non_nestable_inlines | italic)+ "**"
 
 # some normal text 192874981 xx
 # everything > plain_text
-plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | UNPAIRED_BACKQUOTE | ESCAPED_UNDERSCORE | ESCAPED_STAR | NON_IMAGE_BANG | CUR_BR_WORD_NOT_DIRECTIVE | ARROW_R | ARROW_L)+
+plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | UNPAIRED_BACKQUOTE | ESCAPED_CHAR | NON_IMAGE_BANG | CUR_BR_WORD_NOT_DIRECTIVE | ARROW_R | ARROW_L)+
 
 # ```bash
 # a code block
@@ -174,7 +173,7 @@ QUOTE: "\""
 HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
 
-html: html_tag (plain_text | _LF | html_tag)*
+html: SPACES? html_tag (plain_text | code_block | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag
 html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"
@@ -291,6 +290,11 @@ text
     """
     text = "its #1"
     text = r"shrug ¯\\\_!ツ!\_/¯"
+    text = """
+> The callback can't be passed directly - we have double box it; once to safely transport the type
+> data and once again to have a fixed-size object to reference.
+"""
+
     t = parser.parse(text)
     print(t)
     bp = open('../blog/blog/raw/option-rom/POST.md').read()
@@ -304,5 +308,5 @@ text
             print("OK", f)
         except:
             print("NOK", f)
-            #raise
+            raise
         #print(r.pretty())

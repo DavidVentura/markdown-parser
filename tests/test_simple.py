@@ -2,7 +2,7 @@ import pytest
 
 from textwrap import dedent
 
-from lark import Tree
+from lark import Tree, Token
 
 from markdown_parser.parser import make_parser
 from markdown_parser.nodes import *
@@ -35,7 +35,7 @@ PT = PlainText
         ("some text", PT("some text")),
         ("some text with ' ap", PT("some text with ' ap")),
         ("some text with [brackets x] on it", PT("some text with [brackets x] on it")),
-        ("some text\n\nparagraph", [PT("some text"), ParBreak(), PlainText(text='paragraph')]),
+        ("some text\n\nparagraph", [PT("some text"), ParBreak(), PlainText(text="paragraph")]),
         ("_oneword_", Emphasis([PT("oneword")])),
         ("_two words_", Emphasis([PT("two words")])),
         ("_a_", Emphasis([PT("a")])),
@@ -78,7 +78,6 @@ PT = PlainText
             ),
         ),
         ("## *word* word2", Heading(2, [PT(" "), Emphasis([PT("word")]), PT(" word2")])),
-
     ],
 )
 def test_simple_cases(parser, md, expected):
@@ -139,7 +138,7 @@ def test_simple_cases(parser, md, expected):
                 ]
             ),
         ),
-        #("## Title _italic_", []),
+        # ("## Title _italic_", []),
     ],
 )
 def test_compound(parser, md, expected):
@@ -218,6 +217,32 @@ def test_html(parser):
     ]
 
 
+def test_code_in_html(parser):
+    s = """
+    <div>
+    ```bash
+    hint
+    ```
+    </div>
+    text
+    """
+    got = parser.parse(s)
+    assert got == [
+        Token("SPACES", "    "),
+        HtmlOpenTag(elem_type="div", props=[]),
+        PlainText(text="    "),
+        CodeBlock(identifier="bash",
+            lines=[
+                "    hint",
+                "    ",
+            ]),
+        PlainText(text="    "),
+        HtmlCloseTag(elem_type="div"),
+        PlainText(text="    text"),
+        PlainText(text="    "),
+    ]
+
+
 def test_table(parser):
     table = dedent(
         """
@@ -268,13 +293,14 @@ def test_table(parser):
         ),
     ]
 
+
 @pytest.mark.parametrize(
     "md,expected",
     [
         ("a word with\\_underscore", PT("a word with\\_underscore")),
         ("some void\\* data", PT("some void\\* data")),
-        #(r"shrug ¯\\\_(ツ)\_/¯", PT(r"¯\_(ツ)_/¯")),
-    ]
+        (r"shrug ¯\\\_(ツ)\_/¯", PT(r"shrug ¯\_(ツ)_/¯")),
+    ],
 )
 def test_escapes(parser, md, expected):
     got = parser.parse(md)
@@ -282,6 +308,7 @@ def test_escapes(parser, md, expected):
         assert got.children == expected
     else:
         assert got == expected
+
 
 @pytest.mark.parametrize(
     "md,expected",
@@ -291,7 +318,7 @@ def test_escapes(parser, md, expected):
         # FIXME ("unpaired ` bquote\n", PT("unpaired ` bquote")),
         # FIXME ("word with a | in it", PT("word with a | in it")),
         ("an arrow -> right", PT("an arrow -> right")),
-    ]
+    ],
 )
 def test_edge_cases(parser, md, expected):
     got = parser.parse(md)

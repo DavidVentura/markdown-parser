@@ -173,6 +173,13 @@ class NodeTransformer(Transformer):
     def table_row(self, items):
         return TableRow(items)
 
+    def ESCAPED_CHAR(self, items):
+        assert isinstance(items, Token)
+        s = items.value
+        assert len(s) == 2
+        assert s.startswith('\\')
+        return s[1]
+
     def table_divisor(self, items):
         ret = []
         for item in items:
