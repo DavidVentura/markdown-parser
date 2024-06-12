@@ -1,6 +1,41 @@
 # Markdown parser
 
-Parses a subset of Markdown. Generates a tree:
+Parses a subset of Markdown.
+
+The subset is defined as to remove ambiguity; the main difference is that "block elements" (code, quote, html, heading, table, lists)
+**must** have a preceding newline.
+
+The other intentional difference is that unpaired symbols (`*`, `_`) **in text** must be escaped (as `\_` `\*`), this includes underscores in words, so `a_word` becomes `a\_word`.
+
+This is valid:
+```md
+Some text
+
+# A heading
+```
+
+and this is not (no newline):
+```md
+Some text
+# A heading
+```
+
+This is valid:
+```md
+Some text
+
+<div>...</div>
+```
+
+This is not (no newline):
+```md
+Some text
+<div>...</div>
+```
+
+The only inline HTML elements that are supported are `sup` and `sub`.
+
+## Structured format
 
 Input:
 ```
@@ -33,7 +68,6 @@ where `PT` is `PlainText`
 
 ## Not yet implemented
 
-* Escaping literal symbols (`\*` generates `*` in a text item)
 * HTML entities (`&mdash;`)
 
 ## Unsupported (and no plans)
