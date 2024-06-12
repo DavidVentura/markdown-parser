@@ -136,7 +136,7 @@ class NodeTransformer(Transformer):
         assert isinstance(items, Token)
         stripped = items.lstrip()
         leading_space = len(items) - len(stripped)
-        if stripped[0] in ['*']:  # TODO? support - + *?
+        if stripped[0] in ['*', '-', '+']:
             marker = UnorderedListIndicator(stripped[0])
         else:
             # number - support 9) 8) ?

@@ -96,7 +96,7 @@ quote: (quote_body _LF?)+
 # * item
 #   * nested
 # * item
-LEADING_SPACE_LI: /^\s*((\d+[.])|([*])) /m
+LEADING_SPACE_LI: /^\s*((\d+[.])|([*+-])) /m
 list: (list_item _LF?)+
 list_item: LEADING_SPACE_LI (non_nestable_inlines | star_bold | italic)+
 
