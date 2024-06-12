@@ -45,9 +45,7 @@ class NodeTransformer(Transformer):
         return Image(alt, url)
 
     def anchor(self, items):
-        text, url = items
-        if text is not None:
-            text = text.value
+        *text, url = items
         if url is not None:
             url = url.value
         return Anchor(text, url)

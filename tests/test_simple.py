@@ -48,9 +48,9 @@ PT = PlainText
         ("`[sqcode]`", InlineCode("[sqcode]")),
         ("`[sqcode] word`", InlineCode("[sqcode] word")),
         ("two `code` blocks `here`", [PT("two "), InlineCode("code"), PT(" blocks "), InlineCode("here")]),
-        ("[anchor text](url)", Anchor("anchor text", "url")),
-        ("[anchor text]()", Anchor("anchor text", None)),
-        ("[]()", Anchor(None, None)),
+        ("[anchor text](url)", Anchor([PT("anchor text")], "url")),
+        ("[anchor text]()", Anchor([PT("anchor text")], None)),
+        ("[]()", Anchor([], None)),
         ("![alt text](url)", Image("alt text", "url")),
         ("![alt text]()", Image("alt text", None)),
         ("![]()", Image(None, None)),
@@ -94,14 +94,7 @@ def test_simple_cases(parser, md, expected):
 @pytest.mark.parametrize(
     "md,expected",
     [
-        (
-            "text _italic_ text",
-            [
-                PT("text "),
-                Emphasis([PT("italic")]),
-                PT(" text"),
-            ],
-        ),
+        ("text _italic_ text", [PT("text "), Emphasis([PT("italic")]), PT(" text")]),
         (
             "text **bold** text",
             [
@@ -114,12 +107,7 @@ def test_simple_cases(parser, md, expected):
             "text **bold _italic_** text",
             [
                 PT("text "),
-                Bold(
-                    [
-                        PT("bold "),
-                        Emphasis([PT("italic")]),
-                    ]
-                ),
+                Bold([PT("bold "), Emphasis([PT("italic")])]),
                 PT(" text"),
             ],
         ),
@@ -134,15 +122,15 @@ def test_simple_cases(parser, md, expected):
                     Bold([PT("bold")]),
                     PT(" "),
                     Emphasis(
-                        [
-                            Bold([PT("both "), InlineCode("code"), PT(" "), Anchor(None, None)]),
-                        ]
+                        [Bold([PT("both "), InlineCode("code"), PT(" "), Anchor([], None)])]
                     ),
                 ]
             ),
         ),
         # ("## Title _italic_", []),
-        ("<div>[](url)</div>", [HtmlOpenTag("div", []), Anchor(None, "url"), HtmlCloseTag("div")]),
+        ("<div>[](url)</div>", [HtmlOpenTag("div", []), Anchor([], "url"), HtmlCloseTag("div")]),
+        ("[![](aaa)](bbb)", Anchor([Image(None, "aaa")], "bbb")),
+        ("[![x](aaa)](bbb)", Anchor([Image("x", "aaa")], "bbb")),
     ],
 )
 def test_compound(parser, md, expected):

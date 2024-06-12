@@ -19,7 +19,7 @@ class Emphasis(Node):
 
 @dataclass
 class Anchor(Node):
-    text: str | None
+    content: list[Node]
     href: str | None
 
 @dataclass

@@ -48,8 +48,7 @@ PAR_STRING: /[^)]+(?=[)])/
 # limitation of not having a newline in the bracket ([text\nasd]),
 # as we need some way of finding a stop. otherwise we need to limit to `[`
 # which forbids links-to-images: [![]()]()
-# because otherwis
-BR_STRING: /[^^][^\]\n]*(?=])/
+BR_STRING: /[^!^\]][^\]\n]*(?=])/
 CUR_BR_STRING: /[^}]+(?=})/
 COLON_STRING: /[^:\n]+?(?=:)/
 
@@ -151,7 +150,7 @@ table: table_row table_divisor table_row+
 image: "![" [BR_STRING] "](" [PAR_STRING] ")"
 
 # [text](url)
-anchor: "[" [BR_STRING] "](" [PAR_STRING] ")"
+anchor: "[" (image | plain_text | italic | star_bold)* "](" [PAR_STRING] ")"
 
 # Extensions
 
