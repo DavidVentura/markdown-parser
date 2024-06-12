@@ -88,8 +88,7 @@ _LF: /\n/
     | html
     | heading
     | table
-    | unordered_list
-    | ordered_list)
+    | list)
 
 ?xstart: table
 ?start: non_nestable_blocks? (non_nestable_inlines | italic | star_bold | _LF)*
@@ -102,10 +101,9 @@ quote: (quote_body _LF?)+
 # * item
 #   * nested
 # * item
-SPACES: / +/
-LEADING_SPACE_BL: /^\s*[*] /m
-unordered_list: (unordered_list_item _LF?)+
-unordered_list_item: LEADING_SPACE_BL (non_nestable_inlines | star_bold | italic)+
+LEADING_SPACE_LI: /^\s*((\d+[.])|([*])) /m
+list: (list_item _LF?)+
+list_item: LEADING_SPACE_LI (non_nestable_inlines | star_bold | italic)+
 
 # 1. item
 #   3. item2
@@ -178,6 +176,7 @@ QUOTE: "\""
 HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]*/ QUOTE
 
+SPACES: / +/
 html: SPACES? html_tag (plain_text | code_block | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag
 html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"

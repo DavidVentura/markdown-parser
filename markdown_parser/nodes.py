@@ -64,6 +64,19 @@ class Table(Node):
     rows: list[TableRow]
 
 @dataclass
+class UnorderedListIndicator(Node):
+    marker: str
+
+@dataclass
+class OrderedListIndicator(Node):
+    num: int
+
+@dataclass
+class ListItemIndicator(Node):
+    indentation: int
+    marker: UnorderedListIndicator | OrderedListIndicator
+
+@dataclass
 class ListItem(Node):
     content: list[Node]
     indentation: int

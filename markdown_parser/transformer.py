@@ -132,33 +132,29 @@ class NodeTransformer(Transformer):
         count = len([1 for i in items if isinstance(i, Token) and i.type == "HASH"])
         return Heading(count, items[count:])
 
-    def unordered_list_item(self, items):
-        if isinstance(items[0], ParBreak):
-            items = items[1:]
-        leading_space, *content = items
-        indentation = 0
-        if leading_space is not None:
-            assert leading_space.type == "LEADING_SPACE_BL"
-            indentation = len(leading_space.value.lstrip('\n')) - 2 # trailing "* "
-        return ListItem(content, indentation)
+    def LEADING_SPACE_LI(self, items):
+        assert isinstance(items, Token)
+        stripped = items.lstrip()
+        leading_space = len(items) - len(stripped)
+        if stripped[0] in ['*']:  # TODO? support - + *?
+            marker = UnorderedListIndicator(stripped[0])
+        else:
+            # number - support 9) 8) ?
+            assert '.' in stripped
+            num, _, _ = stripped.partition('.')
+            num = int(num)
+            marker = OrderedListIndicator(num)
+        return ListItemIndicator(leading_space, marker)
 
-    def unordered_list(self, items):
-        # filter out delimiting newlines
-        return UnorderedList([i for i in items if not isinstance(i, Token)])
-
-    def ordered_list_item(self, items):
-        leading_space, *content = items
-        indentation = 0
-        assert leading_space is not None
-        assert leading_space.type == "LEADING_SPACE_NL"
-        # spaces digit(s) dot spaces
-        num = int(leading_space.partition(".")[0].strip())
-        indentation = len(leading_space.value) - len(leading_space.lstrip())
-        return OListItem(content, indentation, num)
-
-    def ordered_list(self, items):
-        # filter out delimiting newlines
-        return OrderedList([i for i in items if not isinstance(i, Token)])
+    def list_item(self, items):
+        li = items[0]
+        content = items[1:]
+        print(li)
+        match li.marker:
+            case OrderedListIndicator(idx):
+                return OListItem(content, li.indentation, idx)
+            case UnorderedListIndicator():
+                return ListItem(content, li.indentation)
 
     def PAR_BREAK(self, _items):
         return ParBreak()
