@@ -33,7 +33,7 @@ Some text
 <div>...</div>
 ```
 
-The only inline HTML elements that are supported are `sup` and `sub`.
+The only inline HTML elements that are supported are: `sup`, `sub`, `small`, `smaller`.
 
 ## Structured format
 

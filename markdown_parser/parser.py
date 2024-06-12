@@ -55,6 +55,8 @@ COLON_STRING: /[^:\n]+?(?=:)/
 
 superscript: "<sup>" (italic | star_bold | non_nestable_inlines)+ "</sup>"
 subscript: "<sub>"  (italic | star_bold | non_nestable_inlines)+ "</sub>"
+small: "<small>"  (italic | star_bold | non_nestable_inlines)+ "</small>"
+smaller: "<smaller>"  (italic | star_bold | non_nestable_inlines)+ "</smaller>"
 
 _LF: /\n/
 %import common.ESCAPED_STRING
@@ -74,6 +76,8 @@ _LF: /\n/
     | plain_text
     | custom_directive
     | popover
+    | small
+    | smaller
     | superscript
     | subscript)
 
