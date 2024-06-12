@@ -172,7 +172,7 @@ HTML_PROP_NAME: /[^=>\s]+/
 HTML_VALUE: EQUAL QUOTE /[^"]*/ QUOTE
 
 SPACES: / +/
-html: SPACES? html_tag (plain_text | code_block | _LF | html_tag)*
+html: SPACES? html_tag (non_nestable_inlines | code_block | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag
 html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"

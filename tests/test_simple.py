@@ -142,6 +142,7 @@ def test_simple_cases(parser, md, expected):
             ),
         ),
         # ("## Title _italic_", []),
+        ("<div>[](url)</div>", [HtmlOpenTag("div", []), Anchor(None, "url"), HtmlCloseTag("div")]),
     ],
 )
 def test_compound(parser, md, expected):
