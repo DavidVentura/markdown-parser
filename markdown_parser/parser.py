@@ -11,7 +11,7 @@ LF: /\n/
 PAR_BREAK: LF LF+
 
 CODELINE: /(.|\n)+?(?=```)/
-IDENTIFIER: /[a-z]+/
+IDENTIFIER: /[A-Za-z]+/
 CODE_BLOCK: "```" [IDENTIFIER] LF CODELINE "```"
 
 start: (CODE_BLOCK | TEXT | LF | PAR_BREAK)+
@@ -133,7 +133,7 @@ plain_text.-2: (STRING | BR_WORD_NOT_ANCHOR | ESCAPED_CHAR | NON_IMAGE_BANG | CU
 # code block > inline_pre (`)
 CODELINE: /(.|\n)+?(?=```)/
 code: CODELINE
-identifier: /[a-z]+/
+identifier: /[A-Za-z]+/
 code_block.2: "```" [identifier] _LF (code) "```"
 
 
