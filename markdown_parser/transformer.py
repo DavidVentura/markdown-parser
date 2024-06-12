@@ -147,7 +147,6 @@ class NodeTransformer(Transformer):
     def list_item(self, items):
         li = items[0]
         content = items[1:]
-        print(li)
         match li.marker:
             case OrderedListIndicator(idx):
                 return OListItem(content, li.indentation, idx)

@@ -2,10 +2,18 @@
 
 Parses a subset of Markdown.
 
-The subset is defined as to remove ambiguity; the main difference is that "block elements" (code, quote, html, heading, table, lists)
-**must** have a preceding newline.
+The subset is defined as to remove ambiguity; the main differences are:
 
-The other intentional difference is that unpaired symbols (`*`, `_`) **in text** must be escaped (as `\_` `\*`), this includes underscores in words, so `a_word` becomes `a\_word`.
+- "Block elements" (code, quote, html, heading, table, lists) **must** have a preceding newline.
+    - The only inline HTML elements that are supported are: `sup`, `sub`, `small`, `smaller`.
+- Symbols (`*`, `_`, `>`, `<`) **in text** must be escaped (as `\_`, `\*`, ...), this includes underscores in words, so `a_word` becomes `a\_word`.
+- Multi-line list items are not allowed
+```
+* an item
+this is just text
+```
+
+Some examples on the block newline:
 
 This is valid:
 ```md
@@ -20,20 +28,6 @@ Some text
 # A heading
 ```
 
-This is valid:
-```md
-Some text
-
-<div>...</div>
-```
-
-This is not (no newline):
-```md
-Some text
-<div>...</div>
-```
-
-The only inline HTML elements that are supported are: `sup`, `sub`, `small`, `smaller`.
 
 ## Structured format
 

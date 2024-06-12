@@ -20,7 +20,7 @@ start: (CODE_BLOCK | TEXT | LF | PAR_BREAK)+
 grammar2 = r"""
 
 # string does not capture any symbols which may start an inline-tag
-STRING: /[^`*[_{\n\\!]/
+STRING: /[^`*[_{<>\n\\!]/
 # string can't capture valid text which is not actually a tag, examples:
 # * some [text] which is not an anchor
 #  - still can't have [^text]
@@ -88,7 +88,7 @@ _LF: /\n/
     | table
     | list)
 
-?xstart: table
+?xstart: anchor | image
 ?start: non_nestable_blocks? (non_nestable_inlines | italic | star_bold | _LF)*
 
 italic: (star_italic | under_italic)
@@ -203,6 +203,7 @@ class DoubleParser:
             if chunk.type == "PAR_BREAK":
                 if cur_chunk:
                     chunk_text = "\n".join(cur_chunk)
+                    # print("#" * 50, "\n", chunk_text)
                     res = self.p2.parse(chunk_text)
                     if isinstance(res, lark.Tree):
                         ret.extend(res.children)
@@ -220,7 +221,7 @@ class DoubleParser:
 
         if cur_chunk:
             chunk_text = "\n".join(cur_chunk)
-            #print(chunk_text)
+            # print(chunk_text)
             res = self.p2.parse(chunk_text)
             if isinstance(res, lark.Tree):
                 ret.extend(res.children)
@@ -242,66 +243,6 @@ def make_parser():
 if __name__ == "__main__":
     parser = make_parser()
     import glob
-    text = """With the bindings generated we only need to connect the 3 required signals to our rust code, here's one as an
-example[^2]:
-"""
-    text = """ the [video](https://i.imgur.com/F5IwMvj.mp4). """
-    text = """!"""
-    text = """
-![](https://raw.githubusercontent.com/davidventura/hn/master/screenshots/comments.png?raw=true)
-
-[^1]: Although it is a tad slow on a test device (2013 Nexus 5). I might evaluate later the performance of calling a [rust implementation](https://github.com/kumabook/readability) instead, and whether that's worth it or not.
-"""
-    text = """
-asd
-
-```bash
-some code
-```
-
-text
-"""
-    text = "> quote\n"
-    text2 = "## *word2* word"
-    text = "> quote _italic_ **bold** _**both `code` []()**_"
-    text = ">> dquote"
-    text = "1. list\n1. item"
-    text = "1. list\n    99. item\n1. list2"
-    text = """
-<div>
-text
-</div>
-"""
-    text = """<div> text </div>
-"""
-    text = """
-| Address|Perms|Offset|Path|
-|---------------------------------|:----|-------:|:----------:|
-|`addr`|**bold**|some text|some **bold** text|
-|`addr2`|_italic_|some text|[heap]|
-"""
-    
-
-    text = '<img src="assets/headers.svg" style="margin: 0px auto; width: 100%; max-width: 30rem" />'
-
-    text = """```bash
-    code
-
-    with manylines
-    ```
-    """
-    text = "its #1"
-    text = r"shrug ¯\\\_!ツ!\_/¯"
-    text = """
-> The callback can't be passed directly - we have double box it; once to safely transport the type
-> data and once again to have a fixed-size object to reference.
-"""
-
-    t = parser.parse(text)
-    print(t)
-    bp = open('../blog/blog/raw/option-rom/POST.md').read()
-    r = parser.parse(bp)
-    print('okkk')
     for f in sorted(glob.glob('../blog/blog/raw/*/POST.md')):
         with open(f) as fd:
             bp = fd.read()
