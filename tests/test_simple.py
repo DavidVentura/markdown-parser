@@ -56,6 +56,7 @@ PT = PlainText
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
         ("```\nsome code\n\n2 blank lines```", CodeBlock(None, ["some code", "", "2 blank lines"])),
         (">quote", Quote([PT("quote")])),
+        (">quote\n>quote2", [Quote([PT("quote")]), Quote([PT("quote2")])]),
         ("hash not #title", PT("hash not #title")),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),

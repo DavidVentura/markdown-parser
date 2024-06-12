@@ -92,7 +92,7 @@ _LF: /\n/
 italic: (star_italic | under_italic)
 
 quote_body: ">" " "? (quote_body | italic | star_bold | non_nestable_inlines)+
-quote: (quote_body)+
+quote: (quote_body _LF?)+
 
 # * item
 #   * nested
