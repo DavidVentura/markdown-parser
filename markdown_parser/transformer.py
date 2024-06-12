@@ -1,56 +1,55 @@
-from lark import Transformer, Token
+from lark import Transformer, Token, Tree
 
 from markdown_parser.nodes import *
 
 class NodeTransformer(Transformer):
-    def plain_text(self, items):
+    def plain_text(self, items) -> PlainText:
         text = "".join(items)
         return PlainText(text=text)
 
-    def under_italic(self, items):
+    def under_italic(self, items: list[Node]) -> Emphasis:
         return self.italic(items)
 
-    def italic(self, items):
+    def italic(self, items: list[Node]) -> Emphasis:
         return Emphasis(content=items)
 
-    def star_bold(self, items):
+    def star_bold(self, items: list[Node]) -> Bold:
         return Bold(content=items)
 
-    def delim(self, items):
+    def delim(self, items: list[Node]) -> Node:
         assert len(items) == 1, items
         return items[0]
 
-    def quote_body(self, items):
+    def quote_body(self, items: list[Node]) -> Quote:
         return Quote(items)
 
-    def quote(self, items):
-        # whitespace
-        if isinstance(items[0], ParBreak):
-            items = items[1:]
+    def quote(self, items: list[Node]) -> list[Node]:
         return items
 
-    def inline_pre(self, items):
+    def inline_pre(self, items: list[Token]) -> InlineCode:
         assert len(items) == 1
         string_tok = items[0]
         if string_tok is not None: # ``
             return InlineCode(text=string_tok.value)
         return InlineCode(text="")
 
-    def image(self, items):
+    def image(self, items: list[Node]) -> Image:
         alt, url = items
         if alt is not None:
+            assert isinstance(alt, Token)
             alt = alt.value
         if url is not None:
+            assert isinstance(url, Token)
             url = url.value
         return Image(alt, url)
 
-    def anchor(self, items):
+    def anchor(self, items: list[Node | Token]) -> Anchor:
         *text, url = items
         if url is not None:
             url = url.value
         return Anchor(text, url)
 
-    def custom_directive(self, items):
+    def custom_directive(self, items: list[Token]) -> CustomDirective:
         name, args = items
         name = name.value
         if args is not None:
@@ -60,13 +59,13 @@ class NodeTransformer(Transformer):
 
         return CustomDirective(name, args.split())
 
-    def ref(self, items):
+    def ref(self, items: list[Token]) -> Ref:
         return Ref(items[0].value)
 
-    def refitem(self, items):
+    def refitem(self, items: list[Token | Node]) -> RefItem:
         return RefItem(items[0].value, items[1:])
 
-    def code_block(self, items):
+    def code_block(self, items: list[Token | Tree]) -> CodeBlock:
         identifier_t, *rest = items
         identifier = None
         if identifier_t is not None:
@@ -86,7 +85,7 @@ class NodeTransformer(Transformer):
 
         return CodeBlock(identifier, lines)
 
-    def popover(self, items):
+    def popover(self, items: list[Token]) -> Popover:
         hint, content = items
         return Popover(hint.value, content.value)
 
@@ -122,11 +121,11 @@ class NodeTransformer(Transformer):
 
         return HtmlOpenTag(tag.value, nodeprops)
 
-    def html_close_tag(self, items):
+    def html_close_tag(self, items) -> HtmlCloseTag:
         assert len(items) == 1
         return HtmlCloseTag(items[0].value)
 
-    def heading(self, items):
+    def heading(self, items) -> Heading:
         count = len([1 for i in items if isinstance(i, Token) and i.type == "HASH"])
         return Heading(count, items[count:])
 
@@ -144,43 +143,45 @@ class NodeTransformer(Transformer):
             marker = OrderedListIndicator(num)
         return ListItemIndicator(leading_space, marker)
 
-    def list_item(self, items):
+    def list_item(self, items) -> OListItem | ListItem:
         li = items[0]
         content = items[1:]
         match li.marker:
             case OrderedListIndicator(idx):
-                return OListItem(content, li.indentation, idx)
+                return OListItem(idx, content, li.indentation)
             case UnorderedListIndicator():
-                return ListItem(content, li.indentation)
+                return ListItem(li.marker.marker, content, li.indentation)
 
-    def PAR_BREAK(self, _items):
+        assert False
+
+    def PAR_BREAK(self, _items) -> ParBreak:
         return ParBreak()
 
-    def table(self, items):
+    def table(self, items) -> Table:
         header, divisors, *rows = items
         return Table(header, divisors, rows)
 
-    def table_cell(self, items):
+    def table_cell(self, items) -> TableCell:
         return TableCell(items)
 
-    def table_row(self, items):
+    def table_row(self, items) -> TableRow:
         return TableRow(items)
 
-    def ESCAPED_CHAR(self, items):
+    def ESCAPED_CHAR(self, items) -> str:
         assert isinstance(items, Token)
         s = items.value
         assert len(s) == 2
         assert s.startswith('\\')
         return s[1]
 
-    def superscript(self, items):
+    def superscript(self, items) -> Superscript:
         return Superscript(items)
 
-    def subscript(self, items):
+    def subscript(self, items) -> Subscript:
         return Subscript(items)
 
-    def table_divisor(self, items):
-        ret = []
+    def table_divisor(self, items) -> list[TableDivisor]:
+        ret: list[TableDivisor] = []
         for item in items:
             text = item.value.strip()
             alignment = Alignment.CENTER
@@ -194,3 +195,15 @@ class NodeTransformer(Transformer):
             td = TableDivisor(alignment)
             ret.append(td)
         return ret
+
+    def hr(self, items) -> Hr:
+        return Hr()
+
+    def meta_line(self, items) -> KV:
+        assert len(items) == 2
+        k, v = items
+        return KV(k.strip(), v.strip())
+
+    def metadata(self, items) -> Metadata:
+        _, *entries, _ = items
+        return Metadata(entries)

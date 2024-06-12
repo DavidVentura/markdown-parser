@@ -78,12 +78,15 @@ class ListItemIndicator(Node):
 
 @dataclass
 class ListItem(Node):
+    marker: str
     content: list[Node]
     indentation: int
 
 @dataclass
-class OListItem(ListItem):
+class OListItem(Node):
     index: int
+    content: list[Node]
+    indentation: int
 
 @dataclass
 class UnorderedList(Node):
@@ -117,6 +120,7 @@ class Popover(Node):
 class KV:
     key: str
     val: str
+
 @dataclass
 class HtmlOpenTag(Node):
     elem_type: str
@@ -151,3 +155,11 @@ class Superscript(Node):
 @dataclass
 class Subscript(Node):
     content: list[Node]
+
+@dataclass
+class Hr(Node):
+    pass
+
+@dataclass
+class Metadata(Node):
+    entries: list[KV]

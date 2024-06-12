@@ -66,18 +66,18 @@ PT = PlainText
         ("##h2", Heading(2, [PT("h2")])),
         (
             "* list\n* item",
-            [ListItem([PT("list")], 0), ListItem([PT("item")], 0)],
+            [ListItem("*", [PT("list")], 0), ListItem("*", [PT("item")], 0)],
         ),
         (
             "1. list\n1. item",
-            [OListItem([PT("list")], 0, 1), OListItem([PT("item")], 0, 1)],
+            [OListItem(1, [PT("list")], 0), OListItem(1, [PT("item")], 0)],
         ),
         (
             "1. list\n    99. item\n1. list2",
                 [
-                    OListItem([PT("list")], 0, 1),
-                    OListItem([PT("item")], 4, 99),
-                    OListItem([PT("list2")], 0, 1),
+                    OListItem(1, [PT("list")], 0),
+                    OListItem(99, [PT("item")], 4),
+                    OListItem(1, [PT("list2")], 0),
                 ]
         ),
         ("## *word* word2", Heading(2, [PT(" "), Emphasis([PT("word")]), PT(" word2")])),

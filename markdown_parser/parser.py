@@ -1,9 +1,6 @@
 import lark
 from markdown_parser.transformer import NodeTransformer
-from markdown_parser.nodes import ParBreak
-
-# this should probably include multi-line blocks like ```
-# which shouldn't get split with multiple newlines in between
+from markdown_parser.nodes import ParBreak, Node
 
 grammar1 = r"""
 TEXT: /[^\n]+/
@@ -15,7 +12,6 @@ IDENTIFIER: /[A-Za-z]+/
 CODE_BLOCK: "```" [IDENTIFIER] LF CODELINE "```"
 
 start: (CODE_BLOCK | TEXT | LF | PAR_BREAK)+
-
 """
 grammar2 = r"""
 
@@ -86,10 +82,18 @@ _LF: /\n/
     | html
     | heading
     | table
-    | list)
+    | list
+    | hr)
+#    | metadata)
 
 ?xstart: anchor | image
-?start: non_nestable_blocks? (non_nestable_inlines | italic | star_bold | _LF)*
+?start: non_nestable_blocks? (hr | non_nestable_inlines | italic | star_bold | _LF)*
+
+hr: "---" "-"*
+META_PROP: /[^:]+(?=:)/
+META_VALUE: /[^\n]+/
+meta_line: META_PROP ":" [META_VALUE] _LF+
+metadata: hr _LF meta_line+ hr
 
 italic: (star_italic | under_italic)
 
@@ -185,19 +189,18 @@ heading: HASH+ (non_nestable_inlines | star_bold | italic)+
 
 # TODO
 # -----*
-# escape = \* \_ \`
 # &mdash; html entities
 """
 
 class DoubleParser:
-    def __init__(self):
+    def __init__(self) -> None:
         self.p1 = lark.Lark(grammar1, parser='lalr', debug=True, lexer="contextual")
         self.p2 = lark.Lark(grammar2, parser='lalr', debug=True, lexer="contextual", transformer=NodeTransformer(), maybe_placeholders=True)
 
-    def parse(self, text):
-        ret = []
+    def parse(self, text: str) -> Node | list[Node]:
+        ret: list[Node] = []
         chunks = self.p1.parse(text).children
-        cur_chunk = []
+        cur_chunk: list[str] = []
         for chunk in chunks:
             assert isinstance(chunk, lark.Token), chunk
             if chunk.type == "PAR_BREAK":
