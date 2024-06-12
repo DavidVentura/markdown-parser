@@ -150,7 +150,7 @@ table: table_row table_divisor table_row+
 image: "![" [BR_STRING] "](" [PAR_STRING] ")"
 
 # [text](url)
-anchor: "[" (image | plain_text | italic | star_bold)* "](" [PAR_STRING] ")"
+anchor: "[" (image | inline_pre | plain_text | italic | star_bold)* "](" [PAR_STRING] ")"
 
 # Extensions
 

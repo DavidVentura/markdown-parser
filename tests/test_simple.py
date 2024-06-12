@@ -129,6 +129,7 @@ def test_simple_cases(parser, md, expected):
         ),
         # ("## Title _italic_", []),
         ("<div>[](url)</div>", [HtmlOpenTag("div", []), Anchor([], "url"), HtmlCloseTag("div")]),
+        ("[`code`](bbb)", Anchor([InlineCode("code")], "bbb")),
         ("[![](aaa)](bbb)", Anchor([Image(None, "aaa")], "bbb")),
         ("[![x](aaa)](bbb)", Anchor([Image("x", "aaa")], "bbb")),
     ],
