@@ -180,6 +180,12 @@ class NodeTransformer(Transformer):
         assert s.startswith('\\')
         return s[1]
 
+    def superscript(self, items):
+        return Superscript(items)
+
+    def subscript(self, items):
+        return Subscript(items)
+
     def table_divisor(self, items):
         ret = []
         for item in items:

@@ -130,3 +130,11 @@ class Newline(Node):
 @dataclass
 class ParBreak(Node):
     pass
+
+@dataclass
+class Superscript(Node):
+    content: list[Node]
+
+@dataclass
+class Subscript(Node):
+    content: list[Node]

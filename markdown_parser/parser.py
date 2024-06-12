@@ -58,6 +58,9 @@ BR_STRING: /[^^][^\]\n]*(?=])/
 CUR_BR_STRING: /[^}]+(?=})/
 COLON_STRING: /[^:\n]+?(?=:)/
 
+superscript: "<sup>" (italic | star_bold | non_nestable_inlines)+ "</sup>"
+subscript: "<sub>"  (italic | star_bold | non_nestable_inlines)+ "</sub>"
+
 _LF: /\n/
 %import common.ESCAPED_STRING
 %import common.WS
@@ -75,7 +78,9 @@ _LF: /\n/
     | image
     | plain_text
     | custom_directive
-    | popover)
+    | popover
+    | superscript
+    | subscript)
 
 ?non_nestable_blocks.1: (code_block
     | refitem

@@ -328,3 +328,19 @@ def test_edge_cases(parser, md, expected):
         assert got.children == expected
     else:
         assert got == expected
+
+
+
+@pytest.mark.parametrize(
+    "md,expected",
+    [
+        ("text 1<sup>D</sup>", [PT("text 1"), Superscript([PT("D")])]),
+        ("text 2<sub>**D**</sub>", [PT("text 2"), Subscript([Bold([PT("D")])])]),
+    ],
+)
+def test_inline_html(parser, md, expected):
+    got = parser.parse(md)
+    if isinstance(got, Tree):
+        assert got.children == expected
+    else:
+        assert got == expected
