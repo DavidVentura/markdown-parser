@@ -171,7 +171,7 @@ EQUAL: "="
 QUOTE: "\""
 
 HTML_PROP_NAME: /[^=>\s]+/
-HTML_VALUE: EQUAL QUOTE /[^"]+/ QUOTE
+HTML_VALUE: EQUAL QUOTE /[^"]*/ QUOTE
 
 html: SPACES? html_tag (plain_text | code_block | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag

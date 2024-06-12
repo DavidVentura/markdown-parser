@@ -319,6 +319,7 @@ def test_escapes(parser, md, expected):
         # FIXME ("unpaired ` bquote\n", PT("unpaired ` bquote")),
         # FIXME ("word with a | in it", PT("word with a | in it")),
         ("an arrow -> right", PT("an arrow -> right")),
+        ('<div key="">', HtmlOpenTag("div", [KV("key", '""')])),
     ],
 )
 def test_edge_cases(parser, md, expected):
