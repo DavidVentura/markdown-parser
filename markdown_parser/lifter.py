@@ -19,6 +19,7 @@ from markdown_parser.nodes import (
     Hr,
     UnorderedListIndicator,
     OrderedListIndicator,
+    ListBlock,
 )
 from typing import TypeVar
 
@@ -155,11 +156,8 @@ def lift(items: list[Node]) -> list[Node]:
                 ret.append(make_meta_from_lines(meta_kv))
                 matched_meta = True
                 items = items[num_match:]
-            case ListItem() | OListItem():
-                num_match = match_while(items, (OListItem, ListItem))
-                list_items = [node] + items[:num_match]
-                ret.append(make_list(list_items))
-                items = items[num_match:]
+            case ListBlock():
+                ret.append(make_list(node.children))
             case _:
                 ret.append(node)
     return ret

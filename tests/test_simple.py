@@ -4,14 +4,7 @@ from textwrap import dedent
 
 from lark import Tree, Token
 
-from markdown_parser.parser import make_parser
 from markdown_parser.nodes import *
-
-
-@pytest.fixture(scope="session")
-def parser():
-    p = make_parser()
-    yield p
 
 
 def test_base_case(parser):

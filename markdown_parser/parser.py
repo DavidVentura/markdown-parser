@@ -82,7 +82,7 @@ _LF: /\n/
     | html
     | heading
     | table
-    | list
+    | list_block
     | hr)
 #    | metadata)
 
@@ -104,7 +104,7 @@ quote: (quote_body _LF?)+
 #   * nested
 # * item
 LEADING_SPACE_LI: /^\s*((\d+[.])|([*+-])) /m
-list: (list_item _LF?)+
+list_block: (list_item _LF?)+
 list_item: LEADING_SPACE_LI (non_nestable_inlines | star_bold | italic)+
 
 # 1. item

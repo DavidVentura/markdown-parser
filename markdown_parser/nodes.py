@@ -89,12 +89,8 @@ class OListItem(Node):
     indentation: int
 
 @dataclass
-class UnorderedList(Node):
-    items: list[ListItem]
-
-@dataclass
-class OrderedList(Node):
-    items: list[OListItem]
+class ListBlock(Node):
+    children: list[ListItem | OListItem]
 
 # Extensions
 @dataclass

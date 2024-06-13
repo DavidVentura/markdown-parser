@@ -143,6 +143,9 @@ class NodeTransformer(Transformer):
             marker = OrderedListIndicator(num)
         return ListItemIndicator(leading_space, marker)
 
+    def list_block(self, items):
+        return ListBlock(items)
+
     def list_item(self, items) -> OListItem | ListItem:
         li = items[0]
         content = items[1:]
