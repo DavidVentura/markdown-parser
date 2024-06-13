@@ -1,4 +1,4 @@
-from markdown_parser.lifter import List, lift, FullListItem
+from markdown_parser.lifter import FullQuote, List, lift, FullListItem, QuoteBlock
 from markdown_parser.nodes import Metadata, OrderedListIndicator, PlainText, UnorderedListIndicator
 
 def test_unordered_list(parser):
@@ -114,3 +114,52 @@ description: some description
                 assert e.val == "some description"
             case other:
                 assert False, f'Unexpected key {other}'
+
+
+def test_quote_1(parser):
+    text = """
+> quote1
+>> quote nested1
+>> quote nested2
+"""
+
+    i = parser.parse(text)
+    got = lift(i)
+    assert len(got) == 1
+    q = got[0]
+    assert isinstance(q, QuoteBlock)
+    assert len(q.children) == 1
+    root = q.children[0]
+    assert root.content == [PlainText("quote1")]
+    assert len(root.children) == 2
+    c1, c2 = root.children
+
+    assert c1.content == [PlainText("quote nested1")]
+    assert c2.content == [PlainText("quote nested2")]
+
+
+def test_quote_2(parser):
+    text = """
+> quote1
+>> quote2
+> quote3
+>> quote4
+"""
+
+    i = parser.parse(text)
+    got = lift(i)
+    assert len(got) == 1
+    q = got[0]
+    assert isinstance(q, QuoteBlock)
+    assert len(q.children) == 2
+    root1, root2 = q.children
+
+    assert root1.content == [PlainText("quote1")]
+    assert len(root1.children) == 1
+    c1 = root1.children[0]
+    assert c1.content == [PlainText("quote2")]
+
+    assert root2.content == [PlainText("quote3")]
+    assert len(root2.children) == 1
+    c2 = root2.children[0]
+    assert c2.content == [PlainText("quote4")]

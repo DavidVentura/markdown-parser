@@ -29,6 +29,7 @@ class Image(Node):
 
 @dataclass
 class Quote(Node):
+    level: int
     content: list[Node]
 
 @dataclass

@@ -27,10 +27,21 @@ T = TypeVar("T")
 
 
 @dataclass
+class QuoteBlock(Node):
+    children: list["FullQuote"]
+
+@dataclass
+class FullQuote(Node):
+    content: list[Node]
+    indent_level: int  # meta only
+    children: list["FullQuote"]
+
+
+@dataclass
 class FullListItem(Node):
     marker: UnorderedListIndicator | OrderedListIndicator
     content: list[Node]
-    indent_level: int
+    indent_level: int  # meta only
     children: list["FullListItem"]
 
 @dataclass
@@ -101,34 +112,31 @@ def li_at_level(items: list[FullListItem], level: int) -> list[FullListItem]:
     return ret
 
 def make_list(items: list[ListItem | OListItem]) -> List:
-    prev_indent = None
     """
-    - a
-        - a
-    - a
-        - a
-        - b
-    - a
-    - b
+    Convert a flat list of ListItem | OListItem, such as
+    [ListItem(indentation=n), ListItem(indentation=n+1), ListItem(indentation=n)]
+    into a tree shape
+    List(content=[
+        FullListItem(children=[FullListItem]),
+        FullListItem(children=[]),
+        ])
     """
-
     rlist: List | None = None
     ret: list[FullListItem] = []
     while item := pop(items):
         indent_level = item.indentation // 4  # hardcoding 4 spaces?
         full = li_to_full(item, indent_level)
-        mb_parents = li_at_level(ret, indent_level - 1)
-        if prev_indent is not None:
-            if mb_parents:
-                last = mb_parents[-1]
-                last.children.append(full)
-            else:
-                # there's no parents only if all items are at the same level
-                ret.append(full)
-            prev_indent = indent_level
-        else:
-            prev_indent = indent_level
+        if rlist is None:
             rlist = List(full.marker, [])
+            ret.append(full)
+            continue
+
+        mb_parents = li_at_level(ret, indent_level - 1)
+        if mb_parents:
+            last = mb_parents[-1]
+            last.children.append(full)
+        else:
+            # there's no parents only if all items are at the same level
             ret.append(full)
 
     assert rlist is not None
@@ -136,11 +144,51 @@ def make_list(items: list[ListItem | OListItem]) -> List:
     return rlist
 
 
+def find_q_parent(items: list[FullQuote], to_add: FullQuote) -> FullQuote | None:
+    candidates = [i for i in items if i.indent_level < to_add.indent_level]
+    if not candidates:
+        return None
+    last = candidates[-1]
+    if not last.children:
+        return last
+    mb_child_parent = find_q_parent(last.children, to_add)
+    if mb_child_parent:
+        return mb_child_parent
+    return last
+
+def make_quote(items: list[Quote]) -> QuoteBlock:
+    """
+    Convert a flat list of Quote, such as:
+    Quote(level=0, content=[Text1])
+    Quote(level=1, content=[Text2])
+    Quote(level=0, content=[Text3])
+    into
+    FullQuote(content=[
+        Text1,
+        FullQuote(content=[Text2])
+        Text3,
+    ])
+    """
+    flattened: list[FullQuote] = []
+    while item := pop(items):
+        fq = FullQuote(item.content, indent_level=item.level, children=[])
+        if not flattened:
+            flattened.append(fq)
+            continue
+        mb_parent = find_q_parent(flattened, fq)
+        if mb_parent:
+            mb_parent.children.append(fq)
+        else:
+            assert len(flattened) == 1, flattened # ehh idk
+            flattened.append(fq)
+
+    return QuoteBlock(flattened)
+
 def lift(items: list[Node]) -> list[Node]:
     # [X] N listItems
     # [X] 3 items (hr, plaintext, hr)
+    # [X] N quotes
     # [ ] N html tags
-    # [ ] N quotes
     ret: list[Node] = []
     matched_meta = False
     while node := pop(items):
@@ -158,6 +206,13 @@ def lift(items: list[Node]) -> list[Node]:
                 items = items[num_match:]
             case ListBlock():
                 ret.append(make_list(node.children))
+            case Quote():
+                num_match = match_while(items, Quote)
+                if num_match is None:
+                    continue
+                quotes = [node] + items[:num_match]
+                items = items[num_match:]
+                ret.append(make_quote(quotes))
             case _:
                 ret.append(node)
     return ret

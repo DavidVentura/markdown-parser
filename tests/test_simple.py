@@ -52,8 +52,9 @@ PT = PlainText
         ("```bash\nsome code\nwith `backticks`\n```", CodeBlock("bash", ["some code", "with `backticks`"])),
         ("```ini\n[header]\nvalue=1\n```", CodeBlock("ini", ["[header]", "value=1"])),
         ("```\nsome code\n\n2 blank lines```", CodeBlock(None, ["some code", "", "2 blank lines"])),
-        (">quote", Quote([PT("quote")])),
-        (">quote\n>quote2", [Quote([PT("quote")]), Quote([PT("quote2")])]),
+        (">quote", Quote(0, [PT("quote")])),
+        (">quote\n>quote2", [Quote(0, [PT("quote")]), Quote(0, [PT("quote2")])]),
+        (">quote\n>>nested", [Quote(0, [PT("quote")]), Quote(1, [PT("nested")])]),
         ("hash not #title", PT("hash not #title")),
         ("#h1", Heading(1, [PT("h1")])),
         ("##h2", Heading(2, [PT("h2")])),
@@ -107,7 +108,7 @@ def test_simple_cases(parser, md, expected):
         ("italic _`code`_", [PT("italic "), Emphasis([InlineCode("code")])]),
         (
             "> quote _italic_ **bold** _**both `code` []()**_",
-            Quote(
+            Quote(0,
                 [
                     PT("quote "),
                     Emphasis([PT("italic")]),

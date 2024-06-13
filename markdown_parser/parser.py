@@ -97,7 +97,8 @@ metadata: hr _LF meta_line+ hr
 
 italic: (star_italic | under_italic)
 
-quote_body: ">" " "? (quote_body | italic | star_bold | non_nestable_inlines)+
+QUOTE_LEAD: ">" [/[> ]+/]
+quote_body: QUOTE_LEAD (quote_body | italic | star_bold | non_nestable_inlines)+
 quote: (quote_body _LF?)+
 
 # * item

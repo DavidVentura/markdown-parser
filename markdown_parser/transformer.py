@@ -20,8 +20,11 @@ class NodeTransformer(Transformer):
         assert len(items) == 1, items
         return items[0]
 
-    def quote_body(self, items: list[Node]) -> Quote:
-        return Quote(items)
+    def quote_body(self, items: list[Token | Node]) -> Quote:
+        lead, *items = items
+        assert isinstance(lead, Token)
+        level = lead.value.count(">")
+        return Quote(level - 1, items)
 
     def quote(self, items: list[Node]) -> list[Node]:
         return items
