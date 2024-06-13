@@ -210,3 +210,4 @@ class NodeTransformer(Transformer):
     def metadata(self, items) -> Metadata:
         _, *entries, _ = items
         return Metadata(entries)
+

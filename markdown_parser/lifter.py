@@ -137,10 +137,10 @@ def make_list(items: list[ListItem | OListItem]) -> List:
 
 
 def lift(items: list[Node]) -> list[Node]:
-    # N listItems
-    # N html tags
-    # N quotes
-    # 3 items (hr, plaintext, hr)
+    # [X] N listItems
+    # [X] 3 items (hr, plaintext, hr)
+    # [ ] N html tags
+    # [ ] N quotes
     ret: list[Node] = []
     matched_meta = False
     while node := pop(items):
@@ -163,32 +163,18 @@ def lift(items: list[Node]) -> list[Node]:
     return ret
 
 
-parser = make_parser()
-text = """
+if __name__ == "__main__":
+    parser = make_parser()
+    text = """
 ---
 title: Cursing a process' vDSO for time hacking
 date: 2022-11-30
 tags: cursed, rust
 description: Replacing time-related vDSO entries at runtime
 ---
-asd
-qwe
 """
 
-text = """
-+ item1
-    + item2
-        + item3
-    + item4
-+ item5
-"""
-text = """
-5. item1
-    1. item2
-        4. item3
-    4. item4
-4. item5
-"""
-i = parser.parse(text)
-from pprint import pprint
-pprint(lift(i)[0].children, width=200)
+    i = parser.parse(text)
+    from pprint import pprint
+    pprint(lift(i))
+    #pprint(lift(i)[0].children, width=200)

@@ -240,7 +240,7 @@ class DoubleParser:
             return ret[0]
         return ret
 
-def make_parser():
+def make_parser() -> DoubleParser:
     return DoubleParser()
 
 if __name__ == "__main__":
