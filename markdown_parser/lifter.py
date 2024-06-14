@@ -7,23 +7,15 @@
 from dataclasses import dataclass
 
 from markdown_parser.parser import make_parser
-from markdown_parser.nodes import (
-    KV,
-    Metadata,
-    Node,
-    HtmlOpenTag,
-    ListItem,
-    OListItem,
-    PlainText,
-    Quote,
-    Hr,
-    UnorderedListIndicator,
-    OrderedListIndicator,
-    ListBlock,
-)
-from typing import TypeVar
+from markdown_parser.nodes import *
+from typing import Type, TypeVar
 
 T = TypeVar("T")
+
+
+@dataclass
+class Paragraph(Node):
+    children: list[Node]
 
 
 @dataclass
@@ -184,6 +176,15 @@ def make_quote(items: list[Quote]) -> QuoteBlock:
 
     return QuoteBlock(flattened)
 
+def idx_of_last_block(items: list[Node]) -> int | None:
+    ends_paragraph = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph)
+    ret = None
+    for idx, item in list(enumerate(items))[::-1]:
+        if isinstance(item, ends_paragraph):
+            return ret
+        ret = idx
+    return ret
+
 def lift(items: list[Node]) -> list[Node]:
     # [X] N listItems
     # [X] 3 items (hr, plaintext, hr)
@@ -193,6 +194,14 @@ def lift(items: list[Node]) -> list[Node]:
     matched_meta = False
     while node := pop(items):
         match node:
+            case ParBreak():
+                idx = idx_of_last_block(ret)
+                if idx is not None:
+                    p = Paragraph(ret[idx:])
+                    ret = ret[:idx]
+                    ret.append(p)
+                else:
+                    ret.append(ParBreak())
             case Hr():
                 # Metadata may only happen once per file
                 if matched_meta:
@@ -215,6 +224,13 @@ def lift(items: list[Node]) -> list[Node]:
                 ret.append(make_quote(quotes))
             case _:
                 ret.append(node)
+
+    # final paragraph
+    idx = idx_of_last_block(ret)
+    if idx is not None:
+        p = Paragraph(ret[idx:])
+        ret = ret[:idx]
+        ret.append(p)
     return ret
 
 

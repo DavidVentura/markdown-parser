@@ -6,7 +6,7 @@ def test_simple_render(parser):
     i = parser.parse(text)
     l = lift(i)
     r = render(l)
-    assert r == ['text ', '<b>', 'bold ', '<em>', 'emp', '</em>', ' bold', '</b>']
+    assert r == ['<p>', 'text ', '<b>', 'bold ', '<em>', 'emp', '</em>', ' bold', '</b>', '</p>']
 
 def test_quotes(parser):
     text = """

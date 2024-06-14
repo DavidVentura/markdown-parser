@@ -1,6 +1,6 @@
 from markdown_parser.nodes import *
 from markdown_parser.parser import make_parser
-from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote
+from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph
 from typing import TypeVar
 
 T = TypeVar('T')
@@ -24,7 +24,9 @@ def render(items: list[Node]) -> list[str]:
         to_add = []
         match item:
             case ParBreak():
-                to_add = ["<br/>"]
+                to_add = ['<br/>']
+            case Paragraph():
+                to_add = tag("p", item.children)
             case PlainText():
                 to_add = [item.text]
             case Bold():
