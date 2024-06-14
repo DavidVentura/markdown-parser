@@ -191,7 +191,6 @@ def lift(items: list[Node]) -> list[Node]:
     # [X] N quotes
     # [ ] N html tags
     ret: list[Node] = []
-    matched_meta = False
     while node := pop(items):
         match node:
             case ParBreak():
@@ -203,12 +202,18 @@ def lift(items: list[Node]) -> list[Node]:
                 else:
                     ret.append(ParBreak())
             case Hr():
-                # Metadata may only happen once per file
-                if matched_meta:
+                # Metadata must be at the start of the file
+                if ret:
+                    # normal rule
+                    ret.append(node)
                     continue
+
                 num_match = match_until_delim(items, PlainText, Hr)
                 if num_match is None:
+                    # found something other than PlainText + Hr so this is not a meta block
+                    ret.append(node)
                     continue
+
                 meta_kv = items[: num_match - 1]
                 ret.append(make_meta_from_lines(meta_kv))
                 matched_meta = True
