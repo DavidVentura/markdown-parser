@@ -6,7 +6,7 @@ def test_simple_render(parser):
     i = parser.parse(text)
     l = lift(i)
     r = render(l)
-    assert r == ['<p>', 'text ', '<b>', 'bold ', '<em>', 'emp', '</em>', ' bold', '</b>', '</p>']
+    assert str(r[0]) == '<p>text <b>bold <em>emp</em> bold</b></p>'
 
 def test_quotes(parser):
     text = """
@@ -17,4 +17,4 @@ def test_quotes(parser):
     i = parser.parse(text)
     l = lift(i)
     r = render(l)
-    assert r == ['<blockquote>', 'quote1', '<blockquote>', 'quote nested1', '<br/>', 'quote nested2', '</blockquote>', '</blockquote>']
+    assert str(r[0]) == '<blockquote>quote1<blockquote>quote nested1<br/>quote nested2</blockquote></blockquote>'
