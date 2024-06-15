@@ -1,5 +1,5 @@
-from markdown_parser.lifter import FullQuote, List, lift, FullListItem, QuoteBlock
-from markdown_parser.nodes import Metadata, OrderedListIndicator, PlainText, UnorderedListIndicator
+from markdown_parser.lifter import HTMLNode, List, lift, QuoteBlock
+from markdown_parser.nodes import CodeBlock, Heading, Metadata, OrderedListIndicator, PlainText, UnorderedListIndicator
 
 def test_unordered_list(parser):
     text = """
@@ -163,3 +163,43 @@ def test_quote_2(parser):
     assert len(root2.children) == 1
     c2 = root2.children[0]
     assert c2.content == [PlainText("quote4")]
+
+
+def test_html_basic(parser):
+    text = "<quote1></quote1>"
+
+    i = parser.parse(text)
+    got = lift(i)
+    assert len(got) == 1
+    assert isinstance(got[0], HTMLNode)
+    assert got[0].tag == "quote1"
+    assert len(got[0].children) == 0
+
+
+def test_html_nested(parser):
+    text = "<quote1><quote2></quote2></quote1>"
+
+    i = parser.parse(text)
+    got = lift(i)
+    assert len(got) == 1
+    assert isinstance(got[0], HTMLNode)
+    assert got[0].tag == "quote1"
+
+    assert len(got[0].children) == 1
+    assert got[0].children[0].tag == "quote2"
+
+
+def test_no_par_between_blocks(parser):
+    text = """
+```
+code
+```
+
+# heading
+"""
+
+    i = parser.parse(text)
+    got = lift(i)
+    assert len(got) == 2
+    assert isinstance(got[0], CodeBlock)
+    assert isinstance(got[1], Heading)

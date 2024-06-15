@@ -4,13 +4,33 @@
 # (Quote, Quote, Quote) -> (Quote([entries]))
 # (Hr, PlainText, Hr) -> Metadata
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from markdown_parser.parser import make_parser
 from markdown_parser.nodes import *
 from typing import Type, TypeVar
 
 T = TypeVar("T")
+
+
+@dataclass
+class HTMLNode:
+    tag: str
+    children: list['HTMLNode | str'] = field(default_factory=list)
+    props: list[KV] = field(default_factory=list)
+
+    @property
+    def self_closing(self):
+        return self.tag in ['hr', 'img', 'link', 'br']
+
+    def __str__(self):
+        props = " ".join(f'{prop.key}={prop.val}' for prop in self.props)
+        if props:
+            props = " " + props
+        if self.self_closing:
+            return f'<{self.tag}{props} />'
+        children = "".join(str(c) for c in self.children)
+        return f'<{self.tag}{props}>{children}</{self.tag}>'
 
 
 @dataclass
@@ -21,6 +41,7 @@ class Paragraph(Node):
 @dataclass
 class QuoteBlock(Node):
     children: list["FullQuote"]
+
 
 @dataclass
 class FullQuote(Node):
@@ -35,6 +56,7 @@ class FullListItem(Node):
     content: list[Node]
     indent_level: int  # meta only
     children: list["FullListItem"]
+
 
 @dataclass
 class List(Node):
@@ -85,6 +107,7 @@ def make_meta_from_lines(lines: list[PlainText]) -> Metadata:
         entries.append(KV(k, v))
     return Metadata(entries)
 
+
 def li_to_full(item: ListItem | OListItem, indent_level) -> FullListItem:
     if isinstance(item, OListItem):
         ind = OrderedListIndicator(item.index)
@@ -94,6 +117,7 @@ def li_to_full(item: ListItem | OListItem, indent_level) -> FullListItem:
         assert False, item
     return FullListItem(ind, item.content, indent_level, [])
 
+
 def li_at_level(items: list[FullListItem], level: int) -> list[FullListItem]:
     ret = []
     for i in items:
@@ -102,6 +126,7 @@ def li_at_level(items: list[FullListItem], level: int) -> list[FullListItem]:
         if i.indent_level < level:
             ret.extend(li_at_level(i.children, level))
     return ret
+
 
 def make_list(items: list[ListItem | OListItem]) -> List:
     """
@@ -148,6 +173,7 @@ def find_q_parent(items: list[FullQuote], to_add: FullQuote) -> FullQuote | None
         return mb_child_parent
     return last
 
+
 def make_quote(items: list[Quote]) -> QuoteBlock:
     """
     Convert a flat list of Quote, such as:
@@ -171,25 +197,32 @@ def make_quote(items: list[Quote]) -> QuoteBlock:
         if mb_parent:
             mb_parent.children.append(fq)
         else:
-            assert len(flattened) == 1, flattened # ehh idk
+            assert len(flattened) == 1, flattened  # ehh idk
             flattened.append(fq)
 
     return QuoteBlock(flattened)
 
-def idx_of_last_block(items: list[Node]) -> int | None:
-    ends_paragraph = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph)
-    ret = None
+
+def idx_of_last_elem_by_type(items: list[Node], type_: Type | tuple[Type]) -> int | None:
     for idx, item in list(enumerate(items))[::-1]:
-        if isinstance(item, ends_paragraph):
-            return ret
-        ret = idx
-    return ret
+        if isinstance(item, type_):
+            return idx
+    return None
+
+
+BLOCKS = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph)
+def is_block(n: Node):
+    return isinstance(n, BLOCKS)
+
+def idx_of_last_block(items: list[Node]) -> int | None:
+    idx = idx_of_last_elem_by_type(items, BLOCKS)
+    if idx is None:
+        return None
+    if idx == len(items)-1:  # no last block if it _just_ ended
+        return None
+    return idx+1
 
 def lift(items: list[Node]) -> list[Node]:
-    # [X] N listItems
-    # [X] 3 items (hr, plaintext, hr)
-    # [X] N quotes
-    # [ ] N html tags
     ret: list[Node] = []
     while node := pop(items):
         match node:
@@ -200,7 +233,8 @@ def lift(items: list[Node]) -> list[Node]:
                     ret = ret[:idx]
                     ret.append(p)
                 else:
-                    ret.append(ParBreak())
+                    if not is_block(ret[-1]):
+                        ret.append(ParBreak())
             case Hr():
                 # Metadata must be at the start of the file
                 if ret:
@@ -216,7 +250,6 @@ def lift(items: list[Node]) -> list[Node]:
 
                 meta_kv = items[: num_match - 1]
                 ret.append(make_meta_from_lines(meta_kv))
-                matched_meta = True
                 items = items[num_match:]
             case ListBlock():
                 ret.append(make_list(node.children))
@@ -227,6 +260,19 @@ def lift(items: list[Node]) -> list[Node]:
                 quotes = [node] + items[:num_match]
                 items = items[num_match:]
                 ret.append(make_quote(quotes))
+            case HtmlCloseTag():
+                close_tag = node
+                idx = idx_of_last_elem_by_type(ret, HtmlOpenTag)
+                assert idx is not None, f"No open tag to match {node}"
+                open_tag = ret[idx]
+                assert isinstance(open_tag, HtmlOpenTag)
+                assert (
+                    open_tag.elem_type == close_tag.elem_type
+                ), f"Mismatched open & close tags: {open_tag.elem_type} - {close_tag.elem_type}"
+                children = ret[idx + 1 :]
+                ret = ret[:idx]
+                ret.append(HTMLNode(open_tag.elem_type, children, open_tag.props))
+
             case _:
                 ret.append(node)
 

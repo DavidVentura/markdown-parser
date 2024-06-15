@@ -1,30 +1,10 @@
-from dataclasses import field, dataclass
 
 from markdown_parser.nodes import *
 from markdown_parser.parser import make_parser
-from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph
+from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph, HTMLNode
 from typing import TypeVar
 
 T = TypeVar('T')
-
-@dataclass
-class HTMLNode:
-    tag: str
-    children: list['HTMLNode | str'] = field(default_factory=list)
-    props: list[KV] = field(default_factory=list)
-
-    @property
-    def self_closing(self):
-        return self.tag in ['hr', 'img', 'link', 'br']
-
-    def __str__(self):
-        props = " ".join(f'{prop.key}={prop.val}' for prop in self.props)
-        if props:
-            props = " " + props
-        if self.self_closing:
-            return f'<{self.tag}{props} />'
-        children = "".join(str(c) for c in self.children)
-        return f'<{self.tag}{props}>{children}</{self.tag}>'
 
 def interleave_1(items: list[T], to_add: T) -> list[T]:
     interleaved = [(to_add, item) for item in items]
@@ -43,12 +23,6 @@ def render(items: Node | list[Node | str]) -> list[HTMLNode | str]:
                 pass
             case Hr():
                 ret.append(HTMLNode('hr'))
-            # TODO: HtmlOpenTag / HtmlCloseTag have to get lifted
-            case HtmlOpenTag():
-                props = " ".join(f'{prop.key}={prop.val}' for prop in item.props)
-                ret.append(f'<{item.elem_type} {props}>')
-            case HtmlCloseTag():
-                ret.append(f'</{item.elem_type}>')
             case HtmlSelfCloseTag():
                 node = HTMLNode(item.elem_type, [], item.props)
                 assert node.self_closing
@@ -59,7 +33,10 @@ def render(items: Node | list[Node | str]) -> list[HTMLNode | str]:
             case CodeBlock():
                 ret.append(HTMLNode("pre", [HTMLNode("code", ['\n'.join(item.lines)])]))
             case Image():
-                ret.append(HTMLNode("img", [], [KV("src", item.url), KV("alt", item.alt)]))
+                props = [KV("src", item.url)]
+                if item.alt:
+                    props.append(KV("alt", item.alt))
+                ret.append(HTMLNode("img", [], props))
             case Anchor():
                 ret.append(HTMLNode("a", render(item.content), [KV("href", item.href)]))
             case InlineCode():
@@ -80,6 +57,8 @@ def render(items: Node | list[Node | str]) -> list[HTMLNode | str]:
                     ret.append(HTMLNode("blockquote", interleave_1(item.children, ParBreak())))
             case QuoteBlock():
                 ret.append(HTMLNode("blockquote", render(item.children)))
+            case HTMLNode():
+                ret.append(HTMLNode(item.tag, render(item.children), item.props))
             case other:
                 print('was other', type(other))
 
