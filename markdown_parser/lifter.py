@@ -28,7 +28,7 @@ class HTMLNode:
         if props:
             props = " " + props
         if self.self_closing:
-            return f'<{self.tag}{props} />'
+            return f'<{self.tag}{props}/>'
         children = "".join(str(c) for c in self.children)
         return f'<{self.tag}{props}>{children}</{self.tag}>'
 

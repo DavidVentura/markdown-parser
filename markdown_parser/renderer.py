@@ -1,17 +1,17 @@
-
 from markdown_parser.nodes import *
 from markdown_parser.parser import make_parser
 from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph, HTMLNode
 from typing import TypeVar
 
 T = TypeVar('T')
+U = TypeVar('U')
 
-def interleave_1(items: list[T], to_add: T) -> list[T]:
+def interleave_1(items: list[T], to_add: U) -> list[T | U]:
     interleaved = [(to_add, item) for item in items]
     flattened = [i for item in interleaved for i in item][1:]  # remove leading to_add
     return flattened
 
-def render(items: Node | list[Node | str]) -> list[HTMLNode | str]:
+def render(items: Node | list[Node]) -> list[HTMLNode | str]:
     ret: list[HTMLNode | str] = []
     if isinstance(items, Node):
         items = [items]
@@ -54,7 +54,7 @@ def render(items: Node | list[Node | str]) -> list[HTMLNode | str]:
             case FullQuote():
                 ret.extend(render(item.content))
                 if item.children:
-                    ret.append(HTMLNode("blockquote", interleave_1(item.children, ParBreak())))
+                    ret.append(HTMLNode("blockquote", render(interleave_1(item.children, ParBreak()))))
             case QuoteBlock():
                 ret.append(HTMLNode("blockquote", render(item.children)))
             case HTMLNode():
