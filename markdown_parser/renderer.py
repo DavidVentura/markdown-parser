@@ -33,6 +33,8 @@ def render(items: Node | list[Node]) -> list[HTMLNode | str]:
             case CodeBlock():
                 ret.append(HTMLNode("pre", [HTMLNode("code", ['\n'.join(item.lines)])]))
             case Image():
+                if item.url is None:
+                    continue
                 props = [KV("src", item.url)]
                 if item.alt:
                     props.append(KV("alt", item.alt))
