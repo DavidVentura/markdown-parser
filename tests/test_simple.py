@@ -306,6 +306,7 @@ def test_escapes(parser, md, expected):
         # FIXME ("word with a | in it", PT("word with a | in it")),
         ("an arrow -> right", PT("an arrow -> right")),
         ('<div key="">', HtmlOpenTag("div", [KV("key", '""')])),
+        ('text\n```c\ncode```', [PlainText("text"), CodeBlock("c", ["code"])]),
     ],
 )
 def test_edge_cases(parser, md, expected):

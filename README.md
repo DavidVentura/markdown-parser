@@ -4,30 +4,28 @@ Parses a subset of Markdown.
 
 The subset is defined as to remove ambiguity; the main differences are:
 
-- "Block elements" (code, quote, html, heading, table, lists) **must** have a preceding newline.
+- "Ambiguous block elements" (quote, html, heading, table, lists) **must** have a preceding newline.
     - The only inline HTML elements that are supported are: `sup`, `sub`, `small`, `smaller`.
-- Symbols (`*`, `_`, `>`, `<`) **in text** must be escaped (as `\_`, `\*`, ...), this includes underscores in words, so `a_word` becomes `a\_word`.
+- Bare symbols (`*`, `_`, `>`, `<`) **in text** must be escaped (as `\_`, `\*`, ...), this includes underscores in words, so `a_word` becomes `a\_word`.
 - Multi-line list items are not allowed
 ```
 * an item
 this is just text
 ```
 
-Some examples on the block newline:
+An example on blocks which require newline, this is not valid:
 
-This is valid:
-```md
-Some text
-
-# A heading
-```
-
-and this is not (no newline):
 ```md
 Some text
 # A heading
 ```
 
+A blank line must precede the heading:
+```md
+Some text
+
+# A heading
+```
 
 ## Structured format
 

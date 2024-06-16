@@ -87,7 +87,7 @@ _LF: /\n/
 #    | metadata)
 
 ?xstart: anchor | image
-?start: non_nestable_blocks? (hr | non_nestable_inlines | italic | star_bold | _LF)*
+?start: non_nestable_blocks? (hr | code_block | non_nestable_inlines | italic | star_bold | _LF)*
 
 hr: "---" "-"*
 META_PROP: /[^:]+(?=:)/
