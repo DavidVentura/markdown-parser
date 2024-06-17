@@ -16,7 +16,7 @@ T = TypeVar("T")
 @dataclass
 class HTMLNode:
     tag: str
-    children: list['HTMLNode | str'] = field(default_factory=list)
+    children: list['HTMLNode'] = field(default_factory=list)
     props: list[KV] = field(default_factory=list)
 
     @property
