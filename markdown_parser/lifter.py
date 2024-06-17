@@ -211,29 +211,45 @@ def idx_of_last_elem_by_type(items: list[Node], type_: Type | tuple[Type]) -> in
 
 
 BLOCKS = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph)
+INLINE_HTML_TAGS = ["sup", "sub", "small", "smaller"]
 def is_block(n: Node):
-    return isinstance(n, BLOCKS)
+    return isinstance(n, BLOCKS) or (isinstance(n, HTMLNode) and n.tag not in INLINE_HTML_TAGS)
 
-def idx_of_last_block(items: list[Node]) -> int | None:
-    idx = idx_of_last_elem_by_type(items, BLOCKS)
-    if idx is None:
-        return None
-    if idx == len(items)-1:  # no last block if it _just_ ended
-        return None
-    return idx+1
+class BlockRes:
+    ...
+class LastWasBlock(BlockRes):
+    ...
+class NotFound(BlockRes):
+    ...
+@dataclass
+class Found(BlockRes):
+    idx: int
+
+def idx_of_last_block(items: list[Node]) -> BlockRes:
+    # TODO ugh inband signaling
+    # -1 not found, -2 last item was block, >=0 = idx
+    ret = -1
+    for idx, item in list(enumerate(items))[::-1]:
+        if is_block(item):
+            ret = idx+1
+            break
+    if is_block(items[-1]): # found a block, but it's the last entry
+        return LastWasBlock()
+    if ret > 0:
+        return Found(ret)
+    return NotFound()
 
 def lift(items: list[Node]) -> list[Node]:
     ret: list[Node] = []
     while node := pop(items):
         match node:
             case ParBreak():
-                idx = idx_of_last_block(ret)
-                if idx is not None:
-                    p = Paragraph(ret[idx:])
-                    ret = ret[:idx]
-                    ret.append(p)
-                else:
-                    if not is_block(ret[-1]):
+                match idx_of_last_block(ret):
+                    case Found(idx):
+                        p = Paragraph(ret[idx:])
+                        ret = ret[:idx]
+                        ret.append(p)
+                    case NotFound():
                         ret.append(ParBreak())
             case Hr():
                 # Metadata must be at the start of the file
@@ -277,11 +293,13 @@ def lift(items: list[Node]) -> list[Node]:
                 ret.append(node)
 
     # final paragraph
-    idx = idx_of_last_block(ret)
-    if idx is not None:
-        p = Paragraph(ret[idx:])
-        ret = ret[:idx]
-        ret.append(p)
+    match idx_of_last_block(ret):
+        case Found(idx):
+            p = Paragraph(ret[idx:])
+            ret = ret[:idx]
+            ret.append(p)
+        case NotFound():
+            ret = [Paragraph(ret)]
     return ret
 
 
