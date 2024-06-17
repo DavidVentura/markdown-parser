@@ -34,11 +34,6 @@ class HTMLNode:
 
 
 @dataclass
-class RefBlock(Node):
-    children: list[Node]
-
-
-@dataclass
 class Paragraph(Node):
     children: list[Node]
 

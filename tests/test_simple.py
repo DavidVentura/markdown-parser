@@ -68,11 +68,13 @@ PT = PlainText
         ),
         (
             "1. list\n    99. item\n1. list2",
-                ListBlock([
+            ListBlock(
+                [
                     OListItem(1, [PT("list")], 0),
                     OListItem(99, [PT("item")], 4),
                     OListItem(1, [PT("list2")], 0),
-                ])
+                ]
+            ),
         ),
         ("## *word* word2", Heading(2, [PT(" "), Emphasis([PT("word")]), PT(" word2")])),
     ],
@@ -108,17 +110,16 @@ def test_simple_cases(parser, md, expected):
         ("italic _`code`_", [PT("italic "), Emphasis([InlineCode("code")])]),
         (
             "> quote _italic_ **bold** _**both `code` []()**_",
-            Quote(0,
+            Quote(
+                0,
                 [
                     PT("quote "),
                     Emphasis([PT("italic")]),
                     PT(" "),
                     Bold([PT("bold")]),
                     PT(" "),
-                    Emphasis(
-                        [Bold([PT("both "), InlineCode("code"), PT(" "), Anchor([], None)])]
-                    ),
-                ]
+                    Emphasis([Bold([PT("both "), InlineCode("code"), PT(" "), Anchor([], None)])]),
+                ],
             ),
         ),
         # ("## Title _italic_", []),
@@ -140,7 +141,7 @@ def test_compound(parser, md, expected):
     "md,expected",
     [
         ("[^1]", Ref("1")),
-        ("\n[^1]: something", RefItem("1", [PT(" something")])),
+        ("\n[^1]: something", RefBlock([RefItem("1", [PT(" something")])])),
         ("{^embed-file: my-file.svg}", CustomDirective("embed-file", ["my-file.svg"])),
         ("{^run-script: script.py --arg 1 2 3}", CustomDirective("run-script", ["script.py", "--arg", "1", "2", "3"])),
         ("{^hint|popover}", Popover("hint", "popover")),
@@ -218,11 +219,13 @@ def test_code_in_html(parser):
         Token("SPACES", "    "),
         HtmlOpenTag(elem_type="div", props=[]),
         PlainText(text="    "),
-        CodeBlock(identifier="bash",
+        CodeBlock(
+            identifier="bash",
             lines=[
                 "    hint",
                 "    ",
-            ]),
+            ],
+        ),
         PlainText(text="    "),
         HtmlCloseTag(elem_type="div"),
         PlainText(text="    text"),
@@ -306,7 +309,7 @@ def test_escapes(parser, md, expected):
         # FIXME ("word with a | in it", PT("word with a | in it")),
         ("an arrow -> right", PT("an arrow -> right")),
         ('<div key="">', HtmlOpenTag("div", [KV("key", '""')])),
-        ('text\n```c\ncode```', [PlainText("text"), CodeBlock("c", ["code"])]),
+        ("text\n```c\ncode```", [PlainText("text"), CodeBlock("c", ["code"])]),
     ],
 )
 def test_edge_cases(parser, md, expected):
@@ -315,7 +318,6 @@ def test_edge_cases(parser, md, expected):
         assert got.children == expected
     else:
         assert got == expected
-
 
 
 @pytest.mark.parametrize(
@@ -331,3 +333,23 @@ def test_inline_html(parser, md, expected):
         assert got.children == expected
     else:
         assert got == expected
+
+
+def test_footnotes(parser):
+    text = """
+[^f1][^f2]
+
+[^f1]: some content1
+[^f2]: some content2
+"""
+    got = parser.parse(text)
+    assert len(got) == 4
+    assert got == [
+        Ref(text="f1"),
+        Ref(text="f2"),
+        ParBreak(),
+        RefBlock([
+            RefItem(ref="f1", text=[PlainText(text=" some content1")]),
+            RefItem(ref="f2", text=[PlainText(text=" some content2")]),
+        ]),
+    ]

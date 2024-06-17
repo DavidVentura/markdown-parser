@@ -65,6 +65,9 @@ class NodeTransformer(Transformer):
     def ref(self, items: list[Token]) -> Ref:
         return Ref(items[0].value)
 
+    def refblock(self, items: list[Token | Node]) -> RefBlock:
+        return RefBlock(items)
+
     def refitem(self, items: list[Token | Node]) -> RefItem:
         return RefItem(items[0].value, items[1:])
 

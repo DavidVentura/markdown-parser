@@ -52,13 +52,25 @@ def test_popover(parser, data, expected):
     r = render(l)
     assert str(r[0]) == expected
 
-@pytest.mark.parametrize(["data", "expected1", "expected2"], [
-    ("[^ref]\n\n[^ref]: content", '<sup><a href="#fn-1">1</a></sup>', '<ol><li id="fn-1"> content</li></ol>'),
-])
-def test_footnote(parser, data, expected1, expected2):
+def test_footnote_1(parser):
+    data = "[^ref]\n\n[^ref]: content"
+    expected1 = '<sup><a href="#fn-1" id="fnref-1">1</a></sup>'
+    expected2 = '<div class="footnotes"><hr/><ol><li id="fn-1"> content<a href="#fnref-1">↩</a></li></ol></div>'
     i = parser.parse(data)
     l = lift(i)
     r = render(l)
     assert len(r) == 3
     assert str(r[0]) == expected1
     assert str(r[2]) == expected2
+
+def test_footnote_2(parser):
+    data = "[^ref][^ref2]\n\n[^ref]: content\n[^ref2]: content2"
+    expected1 = '<sup><a href="#fn-1" id="fnref-1">1</a></sup>'
+    expected2 = '<div class="footnotes"><hr/><ol><li id="fn-1"> content<a href="#fnref-1">↩</a></li><li id="fn-2"> content2<a href="#fnref-2">↩</a></li></ol></div>'
+    i = parser.parse(data)
+    l = lift(i)
+    r = render(l)
+    assert len(r) == 4
+    assert str(r[0]) == expected1
+    assert str(r[2]) == "<br/>"
+    assert str(r[3]) == expected2

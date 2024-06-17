@@ -77,7 +77,7 @@ _LF: /\n/
     | subscript)
 
 ?non_nestable_blocks.1: (code_block
-    | refitem
+    | refblock
     | quote
     | html
     | heading
@@ -164,6 +164,7 @@ ref: "[^" /[^\]]+/ "]"
 
 # [^ref]: some text
 # where [^ref] is at the start of a line
+refblock: (refitem _LF?)+
 refitem: "[^" /[^\]]+/ "]:" (non_nestable_inlines | italic | star_bold)+
 
 # {^embed-file: file}

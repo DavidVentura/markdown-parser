@@ -78,7 +78,7 @@ Heading
 
 ## Extensions
 
-* Popover: `{^hint|content}`
 * Custom directive: `{^directive-name: arg1 arg2}`
 * Footnotes: `[^reference]` and `[^reference]: markup`
-
+* Metadata: `key: value` lines between two `---` at the very beginning of the file
+* Popover: `{^hint|content}`

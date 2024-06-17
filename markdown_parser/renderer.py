@@ -102,16 +102,22 @@ def _render(items: Node | list[Node], ref_map: dict[str, int]) -> list[HTMLNode]
                 h = HTMLNode("span", [TextHTMLNode(tag='', text=item.hint)], [KV("data-tooltip", item.content)])
                 ret.append(h)
             case Ref():
-                idx = max(ref_map.values()) if ref_map else 1
+                idx = max(ref_map.values()) + 1 if ref_map else 1
                 ref_map[item.text] = idx
-                a = HTMLNode("a", [TextHTMLNode("", text=str(idx))], props=[KV("href", f"#fn-{idx}")])
+                a = HTMLNode("a", [TextHTMLNode("", text=str(idx))],
+                        props=[KV("href", f"#fn-{idx}"), KV("id", f"fnref-{idx}")])
                 sup = HTMLNode("sup", [a])
                 ret.append(sup)
             case RefBlock():
-                ret.append(HTMLNode("ol", _render(item.children, ref_map)))
+                hr = HTMLNode("hr")
+                ol = HTMLNode("ol", _render(item.children, ref_map))
+                div = HTMLNode("div", [hr, ol], [KV("class", "footnotes")])
+                ret.append(div)
             case RefItem():
                 idx = ref_map[item.ref]
-                ret.append(HTMLNode("li", _render(item.text, ref_map), props=[KV("id", f"fn-{idx}")]))
+                ref_content = item.text
+                ref_content += [Anchor([PlainText("↩")], f"#fnref-{idx}")]
+                ret.append(HTMLNode("li", _render(ref_content, ref_map), props=[KV("id", f"fn-{idx}")]))
             case other:
                 print('was other', type(other))
 

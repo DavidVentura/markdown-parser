@@ -1,5 +1,5 @@
-from markdown_parser.lifter import HTMLNode, List, lift, QuoteBlock
-from markdown_parser.nodes import CodeBlock, Heading, Metadata, OrderedListIndicator, PlainText, UnorderedListIndicator
+from markdown_parser.lifter import HTMLNode, List, RefBlock, lift, QuoteBlock
+from markdown_parser.nodes import CodeBlock, Heading, Metadata, OrderedListIndicator, ParBreak, PlainText, Ref, UnorderedListIndicator
 
 def test_unordered_list(parser):
     text = """
@@ -203,3 +203,21 @@ code
     assert len(got) == 2
     assert isinstance(got[0], CodeBlock)
     assert isinstance(got[1], Heading)
+
+
+def test_footnotes(parser):
+    text = """
+[^f1][^f2]
+
+[^f1]: some content1
+[^f2]: some content2
+"""
+
+    i = parser.parse(text)
+    print(i)
+    got = lift(i)
+    assert len(got) == 4
+    assert isinstance(got[0], Ref)
+    assert isinstance(got[1], Ref)
+    assert isinstance(got[2], ParBreak)
+    assert isinstance(got[3], RefBlock)

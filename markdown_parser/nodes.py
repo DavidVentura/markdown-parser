@@ -104,6 +104,10 @@ class RefItem(Node):
     text: list[Node]
 
 @dataclass
+class RefBlock(Node):
+    children: list[RefItem]
+
+@dataclass
 class CustomDirective(Node):
     name: str
     arguments: list[str]
