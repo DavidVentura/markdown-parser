@@ -34,6 +34,11 @@ class HTMLNode:
 
 
 @dataclass
+class RefBlock(Node):
+    children: list[Node]
+
+
+@dataclass
 class Paragraph(Node):
     children: list[Node]
 
@@ -210,7 +215,7 @@ def idx_of_last_elem_by_type(items: list[Node], type_: Type | tuple[Type]) -> in
     return None
 
 
-BLOCKS = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph)
+BLOCKS = (Heading, CodeBlock, List, QuoteBlock, RefItem, Table, Hr, Metadata, Paragraph, RefBlock)
 INLINE_HTML_TAGS = ["sup", "sub", "small", "smaller"]
 def is_block(n: Node):
     return isinstance(n, BLOCKS) or (isinstance(n, HTMLNode) and n.tag not in INLINE_HTML_TAGS)
@@ -289,6 +294,12 @@ def lift(items: list[Node]) -> list[Node]:
                 ret = ret[:idx]
                 ret.append(HTMLNode(open_tag.elem_type, children, open_tag.props))
 
+            case RefItem():
+                num_match = match_while(items, RefItem)
+                assert num_match is not None
+                refs = [node] + items[:num_match]
+                items = items[num_match:]
+                ret.append(RefBlock(refs))
             case _:
                 ret.append(node)
 

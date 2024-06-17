@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from markdown_parser.nodes import *
 from markdown_parser.parser import make_parser
-from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph, HTMLNode, List, FullListItem
+from markdown_parser.lifter import lift, pop, QuoteBlock, FullQuote, Paragraph, HTMLNode, List, FullListItem, RefBlock
 from typing import TypeVar
 
 T = TypeVar('T')
@@ -20,12 +20,14 @@ def interleave_1(items: list[T], to_add: U) -> list[T | U]:
     return flattened
 
 def render(items: Node | list[Node]) -> list[HTMLNode]:
+    return _render(items, {})
+
+def _render(items: Node | list[Node], ref_map: dict[str, int]) -> list[HTMLNode]:
     ret: list[HTMLNode] = []
     if isinstance(items, Node):
         items = [items]
 
     while item := pop(items):
-        # TODO: list, popover
         match item:
             case Metadata():
                 pass
@@ -37,7 +39,7 @@ def render(items: Node | list[Node]) -> list[HTMLNode]:
                 ret.append(node)
             case Heading():
                 tag_name = "h" + str(item.level)
-                ret.append(HTMLNode(tag_name, render(item.content)))
+                ret.append(HTMLNode(tag_name, _render(item.content, ref_map)))
             case CodeBlock():
                 ret.append(HTMLNode("pre", [HTMLNode("code", [TextHTMLNode(tag="", text='\n'.join(item.lines))])]))
             case Image():
@@ -48,27 +50,27 @@ def render(items: Node | list[Node]) -> list[HTMLNode]:
                     props.append(KV("alt", item.alt))
                 ret.append(HTMLNode("img", [], props))
             case Anchor():
-                ret.append(HTMLNode("a", render(item.content), [KV("href", item.href)]))
+                ret.append(HTMLNode("a", _render(item.content, ref_map), [KV("href", item.href)]))
             case InlineCode():
                 ret.append(HTMLNode("code", [item.text]))
             case ParBreak():
                 ret.append(HTMLNode("br"))
             case Paragraph():
-                ret.append(HTMLNode("p", render(item.children)))
+                ret.append(HTMLNode("p", _render(item.children, ref_map)))
             case PlainText():
                 ret.append(TextHTMLNode(tag="", text=item.text))
             case Bold():
-                ret.append(HTMLNode("b", render(item.content)))
+                ret.append(HTMLNode("b", _render(item.content, ref_map)))
             case Emphasis():
-                ret.append(HTMLNode("em", render(item.content)))
+                ret.append(HTMLNode("em", _render(item.content, ref_map)))
             case FullQuote():
-                ret.extend(render(item.content))
+                ret.extend(_render(item.content, ref_map))
                 if item.children:
-                    ret.append(HTMLNode("blockquote", render(interleave_1(item.children, ParBreak()))))
+                    ret.append(HTMLNode("blockquote", _render(interleave_1(item.children, ParBreak()), ref_map)))
             case QuoteBlock():
-                ret.append(HTMLNode("blockquote", render(item.children)))
+                ret.append(HTMLNode("blockquote", _render(item.children, ref_map)))
             case HTMLNode():
-                ret.append(HTMLNode(item.tag, render(item.children), item.props))
+                ret.append(HTMLNode(item.tag, _render(item.children, ref_map), item.props))
             case List():
                 props = []
                 tag = ""
@@ -79,7 +81,7 @@ def render(items: Node | list[Node]) -> list[HTMLNode]:
                         tag = "ol"
                         if item.marker.num > 1:
                             props = [KV("start", str(item.marker.num))]
-                ret.append(HTMLNode(tag, render(item.children), props))
+                ret.append(HTMLNode(tag, _render(item.children, ref_map), props))
             case FullListItem():
                 tag = "li"
                 all_li_content = item.content
@@ -95,7 +97,18 @@ def render(items: Node | list[Node]) -> list[HTMLNode]:
                             if first.marker.num > 1:
                                 props = [KV("start", str(first.marker.num))]
                     all_li_content += [HTMLNode(ntag, item.children, props)]
-                ret.append(HTMLNode(tag, render(all_li_content)))
+                ret.append(HTMLNode(tag, _render(all_li_content, ref_map)))
+            case Ref():
+                idx = max(ref_map.values()) if ref_map else 1
+                ref_map[item.text] = idx
+                a = HTMLNode("a", [TextHTMLNode("", text=str(idx))], props=[KV("href", f"#fn-{idx}")])
+                sup = HTMLNode("sup", [a])
+                ret.append(sup)
+            case RefBlock():
+                ret.append(HTMLNode("ol", _render(item.children, ref_map)))
+            case RefItem():
+                idx = ref_map[item.ref]
+                ret.append(HTMLNode("li", _render(item.text, ref_map), props=[KV("id", f"fn-{idx}")]))
             case other:
                 print('was other', type(other))
 
