@@ -59,8 +59,16 @@ class TableRow(Node):
     cells: list[TableCell]
 
 @dataclass
+class TableHeaderCell(Node):
+    content: list[Node]
+
+@dataclass
+class TableHeaderRow(Node):
+    cells: list[TableHeaderCell]
+
+@dataclass
 class Table(Node):
-    header: TableRow
+    header: TableHeaderRow
     divisors: list[TableDivisor]
     rows: list[TableRow]
 

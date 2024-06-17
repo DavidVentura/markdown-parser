@@ -118,6 +118,21 @@ def _render(items: Node | list[Node], ref_map: dict[str, int]) -> list[HTMLNode]
                 ref_content = item.text
                 ref_content += [Anchor([PlainText("↩")], f"#fnref-{idx}")]
                 ret.append(HTMLNode("li", _render(ref_content, ref_map), props=[KV("id", f"fn-{idx}")]))
+            case TableCell():
+                ret.append(HTMLNode("td", _render(item.content, ref_map)))
+            case TableRow():
+                tr = HTMLNode("tr", _render(item.cells, ref_map))
+                ret.append(tr)
+            case TableHeaderCell():
+                ret.append(HTMLNode("th", _render(item.content, ref_map)))
+            case Table():
+                head_tr = HTMLNode("tr", _render(item.header.cells, ref_map))
+                head = HTMLNode("thead", [head_tr])
+                rows = []
+                for r in item.rows:
+                    rows.extend(_render(r, ref_map))
+                ret.append(HTMLNode("table", [head] + rows))
+
             case other:
                 print('was other', type(other))
 

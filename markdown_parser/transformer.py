@@ -168,6 +168,9 @@ class NodeTransformer(Transformer):
 
     def table(self, items) -> Table:
         header, divisors, *rows = items
+        assert isinstance(header, TableRow)
+        cells = [TableHeaderCell(c.content) for c in header.cells]
+        header = TableHeaderRow(cells)
         return Table(header, divisors, rows)
 
     def table_cell(self, items) -> TableCell:

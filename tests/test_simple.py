@@ -244,12 +244,12 @@ def test_table(parser):
     )
 
     got = parser.parse(table)
-    assert got.header == TableRow(
+    assert got.header == TableHeaderRow(
         cells=[
-            TableCell(content=[PT(text=" Address")]),
-            TableCell(content=[PT(text="Perms")]),
-            TableCell(content=[PT(text="Offset")]),
-            TableCell(content=[PT(text="Path")]),
+            TableHeaderCell(content=[PT(text=" Address")]),
+            TableHeaderCell(content=[PT(text="Perms")]),
+            TableHeaderCell(content=[PT(text="Offset")]),
+            TableHeaderCell(content=[PT(text="Path")]),
         ],
     )
     assert got.divisors == [
