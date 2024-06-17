@@ -98,6 +98,9 @@ def _render(items: Node | list[Node], ref_map: dict[str, int]) -> list[HTMLNode]
                                 props = [KV("start", str(first.marker.num))]
                     all_li_content += [HTMLNode(ntag, item.children, props)]
                 ret.append(HTMLNode(tag, _render(all_li_content, ref_map)))
+            case Popover():  # Extension, should it be "pluggable" ?
+                h = HTMLNode("span", [TextHTMLNode(tag='', text=item.hint)], [KV("data-tooltip", item.content)])
+                ret.append(h)
             case Ref():
                 idx = max(ref_map.values()) if ref_map else 1
                 ref_map[item.text] = idx
