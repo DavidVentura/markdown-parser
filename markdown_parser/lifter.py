@@ -21,10 +21,10 @@ class HTMLNode:
 
     @property
     def self_closing(self):
-        return self.tag in ['hr', 'img', 'link', 'br']
+        return self.tag in ['hr', 'img', 'link', 'br', 'input', 'source']
 
     def __str__(self):
-        props = " ".join(f'{prop.key}={prop.val}' for prop in self.props)
+        props = " ".join(f'{prop.key}="{prop.val}"' for prop in self.props)
         if props:
             props = " " + props
         if self.self_closing:
@@ -231,8 +231,6 @@ class Found(BlockRes):
     idx: int
 
 def idx_of_last_block(items: list[Node]) -> BlockRes:
-    # TODO ugh inband signaling
-    # -1 not found, -2 last item was block, >=0 = idx
     ret = -1
     for idx, item in list(enumerate(items))[::-1]:
         if is_block(item):
@@ -283,6 +281,7 @@ def lift(items: list[Node]) -> list[Node]:
                 ret.append(make_quote(quotes))
             case HtmlCloseTag():
                 close_tag = node
+                # TODO this should ignore items that don't need closing: <source> or <image>
                 idx = idx_of_last_elem_by_type(ret, HtmlOpenTag)
                 assert idx is not None, f"No open tag to match {node}"
                 open_tag = ret[idx]
