@@ -186,6 +186,12 @@ class NodeTransformer(Transformer):
         assert s.startswith('\\')
         return s[1]
 
+    def small(self, items) -> Superscript:
+        return Small(items)
+
+    def smaller(self, items) -> Superscript:
+        return Smaller(items)
+
     def superscript(self, items) -> Superscript:
         return Superscript(items)
 

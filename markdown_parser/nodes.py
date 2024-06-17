@@ -166,6 +166,14 @@ class Subscript(Node):
     content: list[Node]
 
 @dataclass
+class Small(Node):
+    content: list[Node]
+
+@dataclass
+class Smaller(Node):
+    content: list[Node]
+
+@dataclass
 class Hr(Node):
     pass
 

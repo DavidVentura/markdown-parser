@@ -132,6 +132,15 @@ def _render(items: Node | list[Node], ref_map: dict[str, int]) -> list[HTMLNode]
                 for r in item.rows:
                     rows.extend(_render(r, ref_map))
                 ret.append(HTMLNode("table", [head] + rows))
+            # Should probably gather sup/sub/small/smaller/bold/em in "style"
+            case Superscript():
+                ret.append(HTMLNode("sup", _render(item.content, ref_map)))
+            case Subscript():
+                ret.append(HTMLNode("sub", _render(item.content, ref_map)))
+            case Smaller():
+                ret.append(HTMLNode("smaller", _render(item.content, ref_map)))
+            case Small():
+                ret.append(HTMLNode("small", _render(item.content, ref_map)))
 
             case other:
                 print('was other', type(other))
