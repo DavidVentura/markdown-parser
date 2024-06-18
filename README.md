@@ -6,6 +6,7 @@ The subset is defined as to remove ambiguity; the main differences are:
 
 - "Ambiguous block elements" (quote, html, heading, table, lists) **must** have a preceding newline.
     - The only inline HTML elements that are supported are: `sup`, `sub`, `small`, `smaller`.
+	- Non-ambiguous blocks (code, horizontal rule) do not need a preceding newline.
 - Bare symbols (`*`, `_`, `>`, `<`) **in text** must be escaped (as `\_`, `\*`, ...), this includes underscores in words, so `a_word` becomes `a\_word`.
 - Multi-line list items are not allowed
 ```
@@ -82,3 +83,9 @@ Heading
 * Footnotes: `[^reference]` and `[^reference]: markup`
 * Metadata: `key: value` lines between two `---` at the very beginning of the file
 * Popover: `{^hint|content}`
+
+## "Plugins"
+
+"Plugins" can be enabled/disabled and also user-defined
+
+* Heading anchors: wrap all heading items in anchors which point to themselves
