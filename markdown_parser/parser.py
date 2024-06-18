@@ -84,7 +84,6 @@ _LF: /\n/
     | table
     | list_block
     | hr)
-#    | metadata)
 
 ?xstart: anchor | image
 ?start: non_nestable_blocks? (hr | code_block | non_nestable_inlines | italic | star_bold | _LF)*
@@ -183,7 +182,7 @@ HTML_VALUE: EQUAL QUOTE /[^"]*/ QUOTE
 SPACES: / +/
 html: SPACES? html_tag (non_nestable_inlines | code_block | _LF | html_tag)*
 ?html_tag: html_open_tag | html_close_tag
-html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE] )* ">"
+html_open_tag: "<" /[^\s>]+/ (WS? HTML_PROP_NAME [HTML_VALUE])* ">"
 html_close_tag: "</" /[^>]+?(?=>)/ ">"
 
 HASH: "#"

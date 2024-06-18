@@ -214,10 +214,19 @@ def test_footnotes(parser):
 """
 
     i = parser.parse(text)
-    print(i)
     got = lift(i)
     assert len(got) == 4
     assert isinstance(got[0], Ref)
     assert isinstance(got[1], Ref)
     assert isinstance(got[2], ParBreak)
     assert isinstance(got[3], RefBlock)
+
+
+def test_html_selfclose_attr(parser):
+    text = """
+    <div>
+        <input type="radio" name="tabset" id="tab1" checked />
+    </div>"""
+    i = parser.parse(text)
+    print(i)
+    got = lift(i)

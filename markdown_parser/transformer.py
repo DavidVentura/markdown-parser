@@ -111,6 +111,7 @@ class NodeTransformer(Transformer):
                 if propname:
                     nodeprops.append(KV(propname, propval))
                 if parsed.value == "/":
+                    propname = None
                     self_closing = True
                     continue
                 propval = ""
